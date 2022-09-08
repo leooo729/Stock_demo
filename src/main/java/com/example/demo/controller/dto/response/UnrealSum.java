@@ -1,5 +1,6 @@
-package com.example.demo.model.entity;
+package com.example.demo.controller.dto.response;
 
+import com.example.demo.controller.dto.response.UnrealDetail;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

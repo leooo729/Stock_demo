@@ -13,13 +13,13 @@ import javax.persistence.Id;
 @NoArgsConstructor
 public class CreateHcmioRequest {
 
-//    private String tradeDate;
+    private String tradeDate;
     private String branchNo;
     private String custSeq;
     private String docSeq;
     private String stock;
     private String bsType;
-    private double price;
+    private Double price;
     private Double qty;
 //    private double amt;
 //    private double fee;

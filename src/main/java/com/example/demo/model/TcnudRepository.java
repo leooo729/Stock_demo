@@ -16,6 +16,10 @@ public interface TcnudRepository extends JpaRepository<Tcnud, TcnudRelationPK> {
     Tcnud findByStock(String stock);
 
     List findByBranchNoAndCustSeqAndStock(String branchNo,String custSeq,String stock);
+    List findByBranchNoAndCustSeq(String branchNo,String custSeq);
+
+    @Query(value = "select distinct stock from tcnud where branchNo= ?1 AND custSeq= ?2",nativeQuery = true)
+    List<String> findDistinctStock(String branchNo,String custSeq);
 
 //    @Query(value = "SELECT * FROM tcnud WHERE tradeDate= ?1 AND branchNo= ?2 AND custSeq= ?3 AND docSeq= ?4",nativeQuery = true)
 //    List<Tcnud> findByTradeDateAndBranchNoAndCustSeqAndDocSeq(String tradeDate, String branchNo,String custSeq,String docSeq);

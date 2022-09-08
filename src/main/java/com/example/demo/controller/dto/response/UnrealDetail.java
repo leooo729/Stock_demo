@@ -1,4 +1,4 @@
-package com.example.demo.model.entity;
+package com.example.demo.controller.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

@@ -19,20 +19,20 @@ import static java.lang.Math.floor;
 public class Hcmio {
 
     @Id
-    @Column(name = "TradeDate", columnDefinition = "char(8) NOT NULL")
+    @Column(name = "TradeDate")
     private String tradeDate;
     @Id
-    @Column(name = "BranchNo", columnDefinition = "char(4) NOT NULL")
+    @Column(name = "BranchNo")
     private String branchNo;
     @Id
-    @Column(name = "CustSeq", columnDefinition = "char(7) NOT NULL")
+    @Column(name = "CustSeq")
     private String custSeq;
     @Id
-    @Column(name = "DocSeq", columnDefinition = "char(5) NOT NULL")
+    @Column(name = "DocSeq")
     private String docSeq;
-    @Column(name = "Stock", columnDefinition = "char(6)")
+    @Column(name = "Stock")
     private String stock;
-    @Column(name = "BsType", columnDefinition = "char(1)")
+    @Column(name = "BsType")
     private String bsType;
     @Column(name = "Price")
     private double price;
@@ -46,66 +46,14 @@ public class Hcmio {
     private double tax;
     @Column(name = "StinTax")
     private double stinTax;
-    @Column(name = "NetAmt", columnDefinition = "decimal(16,2)")
+    @Column(name = "NetAmt")
     private double netAmt;
-    @Column(name = "ModDate", columnDefinition = "char(8)")
+    @Column(name = "ModDate")
     private String modDate;
-    @Column(name = "ModTime", columnDefinition = "char(6)")
+    @Column(name = "ModTime")
     private String modTime;
-    @Column(name = "ModUser", columnDefinition = "char(10)")
+    @Column(name = "ModUser")
     private String modUser;
-
-    public double countAmt(double price, double qty) {
-        double amt = floor(price * qty);
-        return amt;
-    }
-
-    public String makeDocSeq() {
-        int alphabetCount = 26;
-        alphabetCount++;
-//        num++;
-//        if(num<10){
-//            String s=Integer.toString(num);
-//            String numToString="00".concat(s);
-//        }
-        //String numToString =Integer.toString(num);
-        return str(alphabetCount);
-    }
-
-    public String str(int alphabetCount) {
-        String alphabet = alphabetCount < 0 ? "" : str((alphabetCount / 26) - 1) + (char) (65 + alphabetCount % 26);
-        return alphabet;
-    }
-
-    public double countFee(double amt) {
-        double fee = floor((amt * 0.001425));
-        return fee;
-    }
-
-    public double countTax(double amt, String bsType) {
-        if ("S".equals(bsType)) {
-            double tax = floor((amt * 0.003));
-            return tax;
-        } else if ("B".equals(bsType)) {
-            return 0;
-        }
-        return 0;
-    }
-
-    public double countNetAmt(double amt, String bsType, double fee, double tax) {
-        if ("S".equals(bsType)) {
-            double netamt = floor((amt - fee - tax));
-            return netamt;
-        } else if ("B".equals(bsType)) {
-            double netamt = -floor((amt + fee));
-            return netamt;
-        }
-        return 0;
-    }
-
-
-
-
 
     }
 

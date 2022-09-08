@@ -2,8 +2,8 @@ package com.example.demo.service;
 
 import com.example.demo.controller.dto.request.UnrealRequest;
 import com.example.demo.controller.dto.response.UnrealResponse;
-import com.example.demo.model.entity.UnrealDetail;
-import com.example.demo.model.entity.UnrealSum;
+import com.example.demo.controller.dto.response.UnrealDetail;
+import com.example.demo.controller.dto.response.UnrealSum;
 import com.example.demo.model.MstmbRepository;
 import com.example.demo.model.TcnudRepository;
 import com.example.demo.model.entity.Hcmio;
@@ -38,138 +38,135 @@ public class TcnudService {
 
     public String createTcnud(Hcmio hcmio) {
 
-        Tcnud getNowTcnud = tcnudRepository.findByStock(hcmio.getStock());
-        if ("S".equals(hcmio.getBsType())) {
-            if (null != getNowTcnud && getNowTcnud.getRemainQty() - hcmio.getQty() == 0) {
-                tcnudRepository.delete(getNowTcnud);
-                return "";
-            }
-        }
-        Tcnud tcnud = new Tcnud();
-
+        Tcnud tcnud = new Tcnud(); //創建存放新現股餘額資料檔的物件
+        //將資料放入現股餘額資料檔
         tcnud.setTradeDate(hcmio.getTradeDate());
         tcnud.setBranchNo(hcmio.getBranchNo());
         tcnud.setCustSeq(hcmio.getCustSeq());
         tcnud.setDocSeq(hcmio.getDocSeq());
         tcnud.setStock(hcmio.getStock());
+        tcnud.setPrice(hcmio.getPrice());
         tcnud.setQty(hcmio.getQty());
-
-        if (null == getNowTcnud) {
-            tcnud.setPrice(hcmio.getPrice());
-            tcnud.setRemainQty(hcmio.getQty());
-            tcnud.setFee(hcmio.getFee());
-            tcnud.setCost(Math.abs(hcmio.getNetAmt()));
-        } else {
-
-            tcnud.setPrice(((getNowTcnud.getQty() * getNowTcnud.getPrice()) + hcmio.getAmt()) / (getNowTcnud.getQty() + hcmio.getQty()));
-            tcnud.setFee(getNowTcnud.getFee() + hcmio.getFee());
-
-            if ("S".equals(hcmio.getBsType())) {
-
-                tcnud.setRemainQty(getNowTcnud.getRemainQty() - tcnud.getQty());
-                tcnud.setCost(getNowTcnud.getCost() - hcmio.getNetAmt());
-
-            } else if ("B".equals(hcmio.getBsType())) {
-
-                tcnud.setRemainQty(getNowTcnud.getRemainQty() + tcnud.getQty());
-                tcnud.setCost(getNowTcnud.getCost() + Math.abs(hcmio.getNetAmt()));
-            }
-            tcnudRepository.delete(getNowTcnud);
-        }
+        tcnud.setRemainQty(hcmio.getQty());
+        tcnud.setFee(hcmio.getFee());
+        tcnud.setCost(Math.abs(hcmio.getNetAmt()));
         tcnud.setModDate(hcmio.getModDate());
         tcnud.setModTime(hcmio.getModTime());
         tcnud.setModUser(hcmio.getModUser());
 
-        tcnudRepository.save(tcnud);
+        tcnudRepository.save(tcnud);//將現股餘額資料檔做儲存
         return "";
     }
 
 
+    //    public List<>
     public UnrealResponse getUnrealDetail(UnrealRequest request) {
+
+        List<Tcnud> tcnud;
+        if (request.getStock().isEmpty()) {
+            tcnud = tcnudRepository.findByBranchNoAndCustSeq(request.getBranchNo(), request.getCustSeq());
+        } else {
+            tcnud = tcnudRepository.findByBranchNoAndCustSeqAndStock(request.getBranchNo(), request.getCustSeq(), request.getStock());
+        }
+
         UnrealResponse unrealResponse = new UnrealResponse();
 
-        if(){
+        if (request.getBranchNo().isBlank() || request.getCustSeq().isBlank()) {//|| request.getStock().isBlank()
             unrealResponse.setResponseCode("002");
             unrealResponse.setMessage("參數檢核錯誤");
-        }else if (null == tcnudRepository.findByStock(request.getStock())) {
+        } else if (tcnud.isEmpty()) {
             unrealResponse.setResponseCode("001");
             unrealResponse.setMessage("查無符合資料");
-        }else{
+        } else {
             unrealResponse.setResponseCode("000");
             unrealResponse.setMessage("");
         }
-        List<Tcnud> tcnud = tcnudRepository.findByBranchNoAndCustSeqAndStock(request.getBranchNo(), request.getCustSeq(), request.getStock());
-        Mstmb mstmb = mstmbRepository.findByStock(request.getStock());
+
         List<UnrealDetail> unrealDetail = new ArrayList<>();
+
         for (Tcnud tcd : tcnud) {
-            UnrealDetail unreal = new UnrealDetail();
+            Mstmb mstmb = mstmbRepository.findByStock(tcd.getStock());
 
-            unreal.setTradeDate(tcd.getTradeDate());
-            unreal.setDocSeq(tcd.getDocSeq());
-            unreal.setStock(tcd.getStock());
-            unreal.setStockName(mstmb.getStockName());
-            unreal.setBuyPrice(tcd.getPrice());
-            unreal.setNowPrice(mstmb.getCurPrice());
-            unreal.setQty(tcd.getQty());
-            unreal.setRemainQty(tcd.getRemainQty());
-            unreal.setFee(tcd.getRemainQty() * tcd.getPrice() * 0.001425);
-            unreal.setCost(tcd.getCost());
-            unreal.setMarketValue(tcd.getRemainQty() * mstmb.getCurPrice() - tcd.getRemainQty() * mstmb.getCurPrice() * 0.003 - tcd.getRemainQty() * mstmb.getCurPrice() * 0.001425);
-            unreal.setUnrealProfit(unreal.getMarketValue() - tcd.getCost());
+            UnrealDetail unrealInfo = new UnrealDetail();
 
-            unrealDetail.add(unreal);
+            unrealInfo.setTradeDate(tcd.getTradeDate());
+            unrealInfo.setDocSeq(tcd.getDocSeq());
+            unrealInfo.setStock(tcd.getStock());
+            unrealInfo.setStockName(mstmb.getStockName());
+            unrealInfo.setBuyPrice(tcd.getPrice());
+            unrealInfo.setNowPrice(mstmb.getCurPrice());
+            unrealInfo.setQty(tcd.getQty());
+            unrealInfo.setRemainQty(tcd.getRemainQty());
+            unrealInfo.setFee(tcd.getRemainQty() * tcd.getPrice() * 0.001425);
+            unrealInfo.setCost(tcd.getCost());
+            unrealInfo.setMarketValue(tcd.getRemainQty() * mstmb.getCurPrice() - tcd.getRemainQty() * mstmb.getCurPrice() * 0.003 - tcd.getRemainQty() * mstmb.getCurPrice() * 0.001425);
+            unrealInfo.setUnrealProfit(unrealInfo.getMarketValue() - tcd.getCost());
+
+            unrealDetail.add(unrealInfo);
         }
-
 
         unrealResponse.setResultList(unrealDetail);
         return unrealResponse;
+
     }
 
     public UnrealResponse getUnrealDetailSum(UnrealRequest request) {
 
         UnrealResponse unrealResponse = new UnrealResponse();
 
-        if(){
+        List<UnrealDetail> unrealDetails = getUnrealDetail(request).getResultList();
+
+
+        if (request.getBranchNo().isBlank() || request.getCustSeq().isBlank()) {// || request.getStock().isBlank()
             unrealResponse.setResponseCode("002");
             unrealResponse.setMessage("參數檢核錯誤");
-        }else if (null == tcnudRepository.findByStock(request.getStock())) {
+            return unrealResponse;
+        } else if (unrealDetails.isEmpty()) {
             unrealResponse.setResponseCode("001");
             unrealResponse.setMessage("查無符合資料");
-        }else{
+            return unrealResponse;
+        } else {
             unrealResponse.setResponseCode("000");
             unrealResponse.setMessage("");
         }
 
-        List<Tcnud> tcnud = tcnudRepository.findByBranchNoAndCustSeqAndStock(request.getBranchNo(), request.getCustSeq(), request.getStock());
-        Mstmb mstmb = mstmbRepository.findByStock(request.getStock());
-        List<UnrealDetail> unrealDetails = getUnrealDetail(request).getResultList();
+        List<String> allUrealStock = tcnudRepository.findDistinctStock(request.getBranchNo(), request.getCustSeq());
+
         List<UnrealSum> unrealSum = new ArrayList<>();
 
-        double sumRemainQty = 0, sumFee = 0, sumCost = 0, sumMarketValue = 0, sumUnrealProfit = 0;
-        for (UnrealDetail unrealDetail : unrealDetails) {
-            sumRemainQty += unrealDetail.getRemainQty();
-            sumFee += unrealDetail.getFee();
-            sumCost += unrealDetail.getCost();
-            sumMarketValue += unrealDetail.getMarketValue();
-            sumUnrealProfit += unrealDetail.getUnrealProfit();
+        for (String stock : allUrealStock) {
+            Mstmb mstmb = mstmbRepository.findByStock(stock);
+            List<UnrealDetail> unrealDetailList = new ArrayList<>();
+
+            double sumRemainQty = 0, sumFee = 0, sumCost = 0, sumMarketValue = 0, sumUnrealProfit = 0;
+            for (UnrealDetail unrealDetail : unrealDetails) {
+                if (unrealDetail.getStock().equals(stock)) {
+                    sumRemainQty += unrealDetail.getRemainQty();
+                    sumFee += unrealDetail.getFee();
+                    sumCost += unrealDetail.getCost();
+                    sumMarketValue += unrealDetail.getMarketValue();
+                    sumUnrealProfit += unrealDetail.getUnrealProfit();
+
+                    unrealDetailList.add(unrealDetail);
+                }
+            }
+            UnrealSum unrealInfo = new UnrealSum();
+            unrealInfo.setStock(request.getStock());
+            unrealInfo.setStockName(mstmb.getStockName());
+            unrealInfo.setNowPrice(mstmb.getCurPrice());
+            unrealInfo.setSumRemainQty(sumRemainQty);
+            unrealInfo.setSumFee(sumFee);
+            unrealInfo.setSumCos(sumCost);
+            unrealInfo.setSumMarketValue(sumMarketValue);
+            unrealInfo.setSumUnrealProfit(sumUnrealProfit);
+            unrealInfo.setDetaiList(unrealDetailList);
+
+            unrealSum.add(unrealInfo);
         }
-
-        UnrealSum unreal = new UnrealSum();
-
-        unreal.setStock(request.getStock());
-        unreal.setStockName(mstmb.getStockName());
-        unreal.setNowPrice(mstmb.getCurPrice());
-        unreal.setSumRemainQty(sumRemainQty);
-        unreal.setSumFee(sumFee);
-        unreal.setSumCos(sumCost);
-        unreal.setSumMarketValue(sumMarketValue);
-        unreal.setSumUnrealProfit(sumUnrealProfit);
-        unreal.setDetaiList(unrealDetails);
-
-        unrealSum.add(unreal);
-
+        unrealResponse.setResultList(unrealSum);
         return unrealResponse;
     }
+
 
     public String unrealizedGainOrLoss(String stock) {
         Mstmb mstmb = mstmbRepository.findByStock(stock);
@@ -238,7 +235,121 @@ public class TcnudService {
 //    }
 
 
+//T表刪除
+
+//    public String createTcnud(Hcmio hcmio) {
+//
+//        Tcnud getNowTcnud = tcnudRepository.findByStock(hcmio.getStock());
+//        if ("S".equals(hcmio.getBsType())) {
+//            if (null != getNowTcnud && getNowTcnud.getRemainQty() - hcmio.getQty() == 0) {
+//                tcnudRepository.delete(getNowTcnud);
+//                return "";
+//            }
+//        }
+//        Tcnud tcnud = new Tcnud();
+//
+//        tcnud.setTradeDate(hcmio.getTradeDate());
+//        tcnud.setBranchNo(hcmio.getBranchNo());
+//        tcnud.setCustSeq(hcmio.getCustSeq());
+//        tcnud.setDocSeq(hcmio.getDocSeq());
+//        tcnud.setStock(hcmio.getStock());
+//        tcnud.setQty(hcmio.getQty());
+//
+//        if (null == getNowTcnud) {
+//            tcnud.setPrice(hcmio.getPrice());
+//            tcnud.setRemainQty(hcmio.getQty());
+//            tcnud.setFee(hcmio.getFee());
+//            tcnud.setCost(Math.abs(hcmio.getNetAmt()));
+//        } else {
+//
+//            tcnud.setPrice(((getNowTcnud.getQty() * getNowTcnud.getPrice()) + hcmio.getAmt()) / (getNowTcnud.getQty() + hcmio.getQty()));
+//            tcnud.setFee(getNowTcnud.getFee() + hcmio.getFee());
+//
+//            if ("S".equals(hcmio.getBsType())) {
+//
+//                tcnud.setRemainQty(getNowTcnud.getRemainQty() - tcnud.getQty());
+//                tcnud.setCost(getNowTcnud.getCost() - hcmio.getNetAmt());
+//
+//            } else if ("B".equals(hcmio.getBsType())) {
+//
+//                tcnud.setRemainQty(getNowTcnud.getRemainQty() + tcnud.getQty());
+//                tcnud.setCost(getNowTcnud.getCost() + Math.abs(hcmio.getNetAmt()));
+//            }
+//            tcnudRepository.delete(getNowTcnud);
+//        }
+//        tcnud.setModDate(hcmio.getModDate());
+//        tcnud.setModTime(hcmio.getModTime());
+//        tcnud.setModUser(hcmio.getModUser());
+//
+//        tcnudRepository.save(tcnud);
+//        return "";
+//    }
 
 
-
-
+//    public UnrealResponse getUnrealDetailSum(UnrealRequest request) {
+//
+//        UnrealResponse unrealResponse = new UnrealResponse();
+//
+//
+////        unrealResponse.setResultList(unrealDetails);
+////        return unrealResponse;
+//
+//        List<UnrealDetail> unrealDetails = getUnrealDetail(request).getResultList();
+//
+//
+//        if (request.getBranchNo().isBlank() || request.getCustSeq().isBlank()) {// || request.getStock().isBlank()
+//            unrealResponse.setResponseCode("002");
+//            unrealResponse.setMessage("參數檢核錯誤");
+//            return unrealResponse;
+//        } else if (unrealDetails.isEmpty()) {
+//            unrealResponse.setResponseCode("001");
+//            unrealResponse.setMessage("查無符合資料");
+//            return unrealResponse;
+//        } else {
+//            unrealResponse.setResponseCode("000");
+//            unrealResponse.setMessage("");
+//        }
+//
+//        Mstmb mstmb = mstmbRepository.findByStock(request.getStock());
+//        List<String> allUrealstock = tcnudRepository.findDistinctStock(request.getBranchNo(), request.getCustSeq());
+//
+////        List<UnrealDetail> a;
+////
+////        for (String stock : allUrealstock) {
+////
+////            for (UnrealDetail unrealDetail : unrealDetails) {
+////                if (unrealDetail.getStock().equals(stock)) {
+////                    a.add(unrealDetail);
+////                }
+////
+////            }
+//        List<UnrealSum> unrealSum = new ArrayList<>();
+//
+//        double sumRemainQty = 0, sumFee = 0, sumCost = 0, sumMarketValue = 0, sumUnrealProfit = 0;
+//        for (UnrealDetail unrealDetail : unrealDetails) {
+//            sumRemainQty += unrealDetail.getRemainQty();
+//            sumFee += unrealDetail.getFee();
+//            sumCost += unrealDetail.getCost();
+//            sumMarketValue += unrealDetail.getMarketValue();
+//            sumUnrealProfit += unrealDetail.getUnrealProfit();
+//        }
+//
+//        UnrealSum unrealInfo = new UnrealSum();
+//
+//        unrealInfo.setStock(request.getStock());
+//        unrealInfo.setStockName(mstmb.getStockName());
+//        unrealInfo.setNowPrice(mstmb.getCurPrice());
+//        unrealInfo.setSumRemainQty(sumRemainQty);
+//        unrealInfo.setSumFee(sumFee);
+//        unrealInfo.setSumCos(sumCost);
+//        unrealInfo.setSumMarketValue(sumMarketValue);
+//        unrealInfo.setSumUnrealProfit(sumUnrealProfit);
+//        unrealInfo.setDetaiList(unrealDetails);
+//
+//        unrealSum.add(unrealInfo);
+//
+//        unrealResponse.setResultList(unrealSum);
+//        return unrealResponse;
+//    }
+//
+//
