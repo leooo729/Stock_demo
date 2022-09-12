@@ -37,6 +37,7 @@ public class TransactionMethodService {
         unrealDetail.setCost(tcnud.getCost());
         unrealDetail.setMarketValue(unrealDetail.getRemainQty() * unrealDetail.getNowPrice() - unrealDetail.getRemainQty() * unrealDetail.getNowPrice() * 0.003 - unrealDetail.getRemainQty() * unrealDetail.getNowPrice() * 0.001425);
         unrealDetail.setUnrealProfit(unrealDetail.getMarketValue() - unrealDetail.getCost());
+        unrealDetail.setProfitability((countProfitability(unrealDetail.getUnrealProfit(),unrealDetail.getCost())+"%"));
         return unrealDetail;
     }
 
@@ -120,10 +121,10 @@ public class TransactionMethodService {
         }
         return 0;
     }
-
-//    public double countProfitability(double unrealProfit,double cost){
-//        double profitability=unrealProfit/cost*
-//    }
+    public double countProfitability(double unrealProfit,double cost){
+        double profitability=unrealProfit/cost*100;
+        return profitability;
+    }
 
 
 }

@@ -143,8 +143,28 @@ public class TransactionService {
 
         for (Tcnud tcd : tcnud) { //用餘額表陣列去跑迴圈
             UnrealDetail unrealInfo = transactionMethodService.getUnrealDetail(tcd); //用餘額表資料去創建未實現損益明細物件
-            unrealDetails.add(unrealInfo); //上行所建物件放入陣列中
+//----------------------------------
+            double profitability=transactionMethodService.countProfitability(unrealInfo.getUnrealProfit(), unrealInfo.getCost());
+
+            if (null != request.getProfitabilityLowerLimit() && null == request.getProfitabilityUpperLimit()) {
+                if (profitability >= request.getProfitabilityLowerLimit()) {
+                    unrealDetails.add(unrealInfo); //所建物件放入陣列中
+                }
+            }else if(null == request.getProfitabilityLowerLimit() && null != request.getProfitabilityUpperLimit()){
+                if(profitability <= request.getProfitabilityUpperLimit()){
+                    unrealDetails.add(unrealInfo); //所建物件放入陣列中
+
+                }
+            }else if(null != request.getProfitabilityLowerLimit() && null != request.getProfitabilityUpperLimit()){
+                if (profitability>= request.getProfitabilityLowerLimit()&&profitability <= request.getProfitabilityUpperLimit()){
+                    unrealDetails.add(unrealInfo); //所建物件放入陣列中
+                }
+            }else if(null == request.getProfitabilityLowerLimit() && null == request.getProfitabilityUpperLimit()){
+                unrealDetails.add(unrealInfo); //所建物件放入陣列中
+            }
+//----------------------------------
         }
+
 
         transactionResponse.setResultList(unrealDetails);
         transactionResponse.setResponseCode("000");
@@ -203,8 +223,26 @@ public class TransactionService {
             unrealInfo.setSumMarketValue(unrealInfo.getNowPrice() * unrealInfo.getSumRemainQty() - unrealInfo.getNowPrice() * unrealInfo.getSumRemainQty() * 0.003 - unrealInfo.getNowPrice() * unrealInfo.getSumRemainQty() * 0.001425);
             unrealInfo.setSumUnrealProfit(unrealInfo.getSumMarketValue() - unrealInfo.getSumCost());
             unrealInfo.setDetaiList(unrealDetailList); //將小迴圈所儲存的未實現損益明細陣列，也丟進物件中
+//----------------------------------
+            double sumProfitability=transactionMethodService.countProfitability(unrealInfo.getSumUnrealProfit(), unrealInfo.getSumCost());
+            unrealInfo.setSumProfitability(sumProfitability+"%");
+            if (null != request.getProfitabilityLowerLimit() && null == request.getProfitabilityUpperLimit()) {
+                if (sumProfitability >= request.getProfitabilityLowerLimit()) {
+                    unrealSum.add(unrealInfo); //將物件放入最終要回傳的陣列中
+                }
+            }else if(null == request.getProfitabilityLowerLimit() && null != request.getProfitabilityUpperLimit()){
+                if(sumProfitability <= request.getProfitabilityUpperLimit()){
+                    unrealSum.add(unrealInfo); //將物件放入最終要回傳的陣列中
 
-            unrealSum.add(unrealInfo); //將物件放入最終要回傳的陣列中
+                }
+            }else if(null != request.getProfitabilityLowerLimit() && null != request.getProfitabilityUpperLimit()){
+                if (sumProfitability>= request.getProfitabilityLowerLimit()&&sumProfitability <= request.getProfitabilityUpperLimit()){
+                    unrealSum.add(unrealInfo); //將物件放入最終要回傳的陣列中
+                }
+            }else if(null == request.getProfitabilityLowerLimit() && null == request.getProfitabilityUpperLimit()){
+                unrealSum.add(unrealInfo); //將物件放入最終要回傳的陣列中
+            }//----------------------------------
+
         }
 
         unrealSumResponse.setResultList(unrealSum);

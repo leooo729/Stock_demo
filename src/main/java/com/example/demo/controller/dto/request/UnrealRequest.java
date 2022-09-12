@@ -13,7 +13,7 @@ public class UnrealRequest {
     private String branchNo;
     private String custSeq;
     private String stock;
-    private Double InterestUpperLimit;
-    private Double InterestLowerLimit;
+    private Double profitabilityUpperLimit;
+    private Double profitabilityLowerLimit;
 
 }

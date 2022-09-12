@@ -20,5 +20,7 @@ public class UnrealSum {
     private Double sumCost;
     private Double sumMarketValue;
     private Double sumUnrealProfit;
+    private String sumProfitability;
     private List<UnrealDetail> detaiList;
+
 }

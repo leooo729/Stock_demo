@@ -22,4 +22,5 @@ public class UnrealDetail {
     private Double cost;
     private Double marketValue;
     private Double unrealProfit;
+    private String profitability;
 }
