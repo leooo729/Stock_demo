@@ -1,10 +1,10 @@
 package com.example.demo.controller;
 
-import com.example.demo.controller.dto.request.CreateHcmioRequest;
 import com.example.demo.controller.dto.request.CreateMstmbRequest;
+import com.example.demo.controller.dto.request.UpdateMstmbRequest;
+import com.example.demo.controller.dto.response.MstmbResponse;
 import com.example.demo.controller.dto.response.StatusResponse;
 import com.example.demo.model.entity.Mstmb;
-import com.example.demo.model.entity.Tcnud;
 import com.example.demo.service.MstmbService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -29,9 +29,14 @@ public class MstmbController {
         Mstmb mstmb=mstmbService.getStockInfo(stock);
         return mstmb;
     }
-    @PostMapping()
-    public StatusResponse createMstmb(@RequestBody CreateMstmbRequest request) {
-        String response = mstmbService.createMstmb(request);
-        return new StatusResponse(response);
+    @PostMapping("/create")
+    public MstmbResponse createMstmb(@RequestBody CreateMstmbRequest request) {
+        MstmbResponse response = mstmbService.createMstmb(request);
+        return response;
+    }
+    @PostMapping("/update")
+    public MstmbResponse updateMstmb(@RequestBody UpdateMstmbRequest request) {
+        MstmbResponse response = mstmbService.updateMstmb(request);
+        return response;
     }
 }

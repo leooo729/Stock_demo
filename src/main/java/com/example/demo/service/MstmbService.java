@@ -1,6 +1,8 @@
 package com.example.demo.service;
 
 import com.example.demo.controller.dto.request.CreateMstmbRequest;
+import com.example.demo.controller.dto.request.UpdateMstmbRequest;
+import com.example.demo.controller.dto.response.MstmbResponse;
 import com.example.demo.model.MstmbRepository;
 import com.example.demo.model.entity.Mstmb;
 import com.example.demo.model.entity.Tcnud;
@@ -26,7 +28,8 @@ public class MstmbService {
         Mstmb mstmb=mstmbRepository.findByStock(stock);
         return mstmb;
     }
-    public String createMstmb(CreateMstmbRequest request){
+    public MstmbResponse createMstmb(CreateMstmbRequest request){
+        MstmbResponse mstmbResponse=new MstmbResponse();
         Mstmb mstmb=new Mstmb();
         mstmb.setStock(request.getStock());
         mstmb.setStockName(request.getStockName());
@@ -40,6 +43,23 @@ public class MstmbService {
 
         mstmbRepository.save(mstmb);
 
-        return "股票資訊新建成功";
+        mstmbResponse.setMstmb(mstmb);
+        mstmbResponse.setStatus("股票資訊新建成功");
+        return mstmbResponse;
+    }
+    public MstmbResponse updateMstmb(UpdateMstmbRequest request){
+        MstmbResponse mstmbResponse=new MstmbResponse();
+        Mstmb mstmb=mstmbRepository.findByStock(request.getStock());
+        mstmb.setCurPrice(request.getCurPrice());
+        mstmb.setRefPrice(request.getCurPrice());
+        mstmb.setModDate(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")));
+        mstmb.setModTime(LocalDateTime.now().format(DateTimeFormatter.ofPattern("HHmmss")));
+        mstmb.setModUser("Leo");
+
+        mstmbRepository.save(mstmb);
+
+        mstmbResponse.setMstmb(mstmb);
+        mstmbResponse.setStatus("現值更新成功");
+        return mstmbResponse;
     }
 }

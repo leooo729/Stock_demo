@@ -10,8 +10,8 @@ import java.util.List;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class UnrealResponse {
-    private List resultList;
+public class UnrealSumResponse {
+    private List<UnrealSum> resultList;
     private String responseCode;
     private String message;
 }

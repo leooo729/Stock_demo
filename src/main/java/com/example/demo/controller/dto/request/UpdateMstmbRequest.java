@@ -9,11 +9,7 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class UnrealRequest {
-    private String branchNo;
-    private String custSeq;
+public class UpdateMstmbRequest {
     private String stock;
-    private Double InterestUpperLimit;
-    private Double InterestLowerLimit;
-
+    private Double curPrice;
 }

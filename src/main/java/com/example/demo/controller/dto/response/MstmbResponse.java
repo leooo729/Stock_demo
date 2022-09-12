@@ -1,18 +1,16 @@
 package com.example.demo.controller.dto.response;
 
+import com.example.demo.model.entity.Mstmb;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.List;
-
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class TransactionResponse {
-    private List<UnrealDetail> resultList;
-    private String responseCode;
-    private String message;
+public class MstmbResponse {
+    private Mstmb mstmb;
+    private String status;
 }

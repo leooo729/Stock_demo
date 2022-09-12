@@ -11,7 +11,7 @@ import org.springframework.stereotype.Repository;
 public interface HcmioRepository extends JpaRepository<Hcmio, HcmioRelationPK> {
     Hcmio findByDocSeq(String docSeq);
     Hcmio findByStock(String stock);
-    Hcmio findByTradeDate(String tradeDate);
+
 
 
     @Query(value = "select docSeq from hcmio where tradeDate =?1 order by tradeDate desc,docSeq desc limit 1;",nativeQuery = true)

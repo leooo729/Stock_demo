@@ -17,7 +17,7 @@ public class UnrealSum {
     private Double nowPrice;
     private Double sumRemainQty;
     private Double sumFee;
-    private Double sumCos;
+    private Double sumCost;
     private Double sumMarketValue;
     private Double sumUnrealProfit;
     private List<UnrealDetail> detaiList;
