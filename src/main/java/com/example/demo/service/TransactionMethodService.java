@@ -121,7 +121,9 @@ public class TransactionMethodService {
         return 0;
     }
 
-//    public double countProfitability(double ,double)
+//    public double countProfitability(double unrealProfit,double cost){
+//        double profitability=unrealProfit/cost*
+//    }
 
 
 }
