@@ -76,7 +76,7 @@ public class TransactionService {
         hcmio.setAmt(transactionMethodService.countAmt(hcmio.getPrice(), hcmio.getQty()));
         hcmio.setFee(transactionMethodService.countFee(hcmio.getAmt()));
         hcmio.setTax(transactionMethodService.countTax(hcmio.getAmt(), hcmio.getBsType()));
-        hcmio.setStinTax(0);
+        hcmio.setStinTax(0.0);
         hcmio.setNetAmt(transactionMethodService.countNetAmt(hcmio.getAmt(), hcmio.getBsType(), hcmio.getFee(), hcmio.getTax()));
         hcmio.setModDate(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")));
         hcmio.setModTime(LocalDateTime.now().format(DateTimeFormatter.ofPattern("HHmmss")));
@@ -284,5 +284,6 @@ public class TransactionService {
 
         return "今日需付交割金為 : " + deliveryFee;
     }
+
 
 }

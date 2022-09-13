@@ -20,6 +20,8 @@ public class TransactionMethodService {
     TcnudRepository tcnudRepository;
     @Autowired
     MstmbRepository mstmbRepository;
+    @Autowired
+    TransactionMethodService transactionMethodService;
 
     public UnrealDetail getUnrealDetail(Tcnud tcnud) { //取得未實現損益明細的物件
         UnrealDetail unrealDetail = new UnrealDetail(); //先創建一未實現損益明細的物件
@@ -101,14 +103,14 @@ public class TransactionMethodService {
         return fee;
     }
 
-    public double countTax(double amt, String bsType) {
+    public Double countTax(double amt, String bsType) {
         if ("S".equals(bsType)) {
             double tax = round((amt * 0.003));
             return tax;
         } else if ("B".equals(bsType)) {
-            return 0;
+            return 0.0;
         }
-        return 0;
+        return 0.0;
     }
 
     public double countNetAmt(double amt, String bsType, double fee, double tax) {

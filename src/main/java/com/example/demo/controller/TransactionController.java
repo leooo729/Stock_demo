@@ -46,11 +46,6 @@ public class TransactionController {
         return response;
     }
 
-    @PostMapping("/caching")
-    public String getCachingStock(@RequestBody DeliveryFeeRequest deliveryFeeRequest) {
-        String response= transactionService.getDeliveryFee(deliveryFeeRequest);
-        return response;
-    }
     @PostMapping("/stock")
     public StockInfoResponse getStockInfo(@RequestBody StockInfoRequest stockInfoRequest){
         StockInfoResponse response=mstmbService.getStockInfo(stockInfoRequest);

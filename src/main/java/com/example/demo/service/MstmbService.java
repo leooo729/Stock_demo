@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 
 @Service
 public class MstmbService {
@@ -41,7 +40,7 @@ public class MstmbService {
         return stockInfoResponse;
     }
 
-    @Cacheable(value = "cacheStock", key = "#request.getStock")
+    @Cacheable(value = "cacheStock", key = "#request.getStock()")
     public StockInfoResponse getStockInfo(StockInfoRequest request) {
         StockInfoResponse stockInfoResponse=new StockInfoResponse();
         Mstmb mstmb = mstmbRepository.findByStock(request.getStock());
@@ -55,8 +54,8 @@ public class MstmbService {
         return stockInfoResponse;
     }
 
-    @CachePut(value = "cacheStock", key = "#request.getStock")
-    public StockInfoResponse updateMstmb(UpdateMstmbRequest request) {
+    @CachePut(value = "cacheStock", key = "#request.getStock()")
+    public StockInfoResponse updateStockPrice(UpdateMstmbRequest request) {
         StockInfoResponse stockInfoResponse = new StockInfoResponse();
         Mstmb mstmb = mstmbRepository.findByStock(request.getStock());
         mstmb.setCurPrice(request.getCurPrice());
@@ -71,6 +70,7 @@ public class MstmbService {
         stockInfoResponse.setStatus("現值更新成功");
         return stockInfoResponse;
     }
+//    public String checkUpdatePrice(String stock){}
 
 }
 
