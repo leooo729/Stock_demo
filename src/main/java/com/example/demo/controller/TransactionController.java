@@ -1,38 +1,62 @@
 package com.example.demo.controller;
 
+import com.example.demo.controller.dto.request.DeliveryFeeRequest;
+import com.example.demo.controller.dto.request.StockInfoRequest;
 import com.example.demo.controller.dto.request.TransactionRequest;
 import com.example.demo.controller.dto.request.UnrealRequest;
+import com.example.demo.controller.dto.response.StockInfoResponse;
 import com.example.demo.controller.dto.response.TransactionResponse;
 import com.example.demo.controller.dto.response.UnrealSumResponse;
+import com.example.demo.service.MstmbService;
 import com.example.demo.service.TransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/v1/unreal")
+@RequestMapping("/api/v1")
 public class TransactionController {
     @Autowired
     TransactionService transactionService;
+    @Autowired
+    MstmbService mstmbService;
 
-    @PostMapping("/add")
+    @PostMapping("/unreal/add")
     public TransactionResponse makeTransaction(@RequestBody TransactionRequest transactionRequest) {
         TransactionResponse response= transactionService.makeTransaction(transactionRequest);
         return response;
     }
 
-    @PostMapping("/detail")
+    @PostMapping("/unreal/detail")
     public TransactionResponse getUnrealDetail(@RequestBody UnrealRequest unrealRequest) {
         TransactionResponse response = transactionService.getUnrealDetail(unrealRequest);
         return response;
     }
-    @PostMapping("/sum")
+    @PostMapping("/unreal/sum")
     public UnrealSumResponse getUnrealDetailSum(@RequestBody UnrealRequest unrealRequest) {
         UnrealSumResponse response= transactionService.getUnrealDetailSum(unrealRequest);
         return response;
     }
+    @PostMapping("/deliveryfee")
+    public String getDeliveryFee(@RequestBody DeliveryFeeRequest deliveryFeeRequest) {
+        String response= transactionService.getDeliveryFee(deliveryFeeRequest);
+        return response;
+    }
+
+    @PostMapping("/caching")
+    public String getCachingStock(@RequestBody DeliveryFeeRequest deliveryFeeRequest) {
+        String response= transactionService.getDeliveryFee(deliveryFeeRequest);
+        return response;
+    }
+    @PostMapping("/stock")
+    public StockInfoResponse getStockInfo(@RequestBody StockInfoRequest stockInfoRequest){
+        StockInfoResponse response=mstmbService.getStockInfo(stockInfoRequest);
+        return response;
+    }
+
 
 
 }

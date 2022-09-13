@@ -35,19 +35,19 @@ public class Hcmio {
     @Column(name = "BsType")
     private String bsType;
     @Column(name = "Price")
-    private double price;
+    private Double price;
     @Column(name = "Qty")
     private Double qty;
     @Column(name = "Amt")
-    private double amt;
+    private Double amt;
     @Column(name = "Fee")
-    private double fee;
+    private Double fee;
     @Column(name = "Tax")
-    private double tax;
+    private Double tax;
     @Column(name = "StinTax")
-    private double stinTax;
+    private Double stinTax;
     @Column(name = "NetAmt")
-    private double netAmt;
+    private Double netAmt;
     @Column(name = "ModDate")
     private String modDate;
     @Column(name = "ModTime")

@@ -91,12 +91,12 @@ public class TransactionMethodService {
         return "allPass";
     }
 
-    public double countAmt(double price, double qty) {
+    public Double countAmt(Double price, Double qty) {
         double amt = round(price * qty);
         return amt;
     }
 
-    public double countFee(double amt) {
+    public Double countFee(double amt) {
         double fee = round((amt * 0.001425));
         return fee;
     }
@@ -128,6 +128,43 @@ public class TransactionMethodService {
 
 
 }
+//    double sumProfitability = transactionMethodService.countProfitability(unrealInfo.getSumUnrealProfit(), unrealInfo.getSumCost());
+//            unrealInfo.setSumProfitability(sumProfitability + "%");
+//                    if (null != request.getProfitabilityLowerLimit() && null == request.getProfitabilityUpperLimit()) {
+//                    if (sumProfitability >= request.getProfitabilityLowerLimit()) {
+//                    unrealSum.add(unrealInfo); //將物件放入最終要回傳的陣列中
+//                    }
+//                    } else if (null == request.getProfitabilityLowerLimit() && null != request.getProfitabilityUpperLimit()) {
+//                    if (sumProfitability <= request.getProfitabilityUpperLimit()) {
+//                    unrealSum.add(unrealInfo); //將物件放入最終要回傳的陣列中
+//
+//                    }
+//                    } else if (null != request.getProfitabilityLowerLimit() && null != request.getProfitabilityUpperLimit()) {
+//                    if (sumProfitability >= request.getProfitabilityLowerLimit() && sumProfitability <= request.getProfitabilityUpperLimit()) {
+//                    unrealSum.add(unrealInfo); //將物件放入最終要回傳的陣列中
+//                    }
+//                    } else if (null == request.getProfitabilityLowerLimit() && null == request.getProfitabilityUpperLimit()) {
+//                    unrealSum.add(unrealInfo); //將物件放入最終要回傳的陣列中
+//                    }
+//
+//                    double profitability = transactionMethodService.countProfitability(unrealInfo.getUnrealProfit(), unrealInfo.getCost());
+//
+//                    if (null != request.getProfitabilityLowerLimit() && null == request.getProfitabilityUpperLimit()) {
+//                    if (profitability >= request.getProfitabilityLowerLimit()) {
+//                    unrealDetails.add(unrealInfo); //所建物件放入陣列中
+//                    }
+//                    } else if (null == request.getProfitabilityLowerLimit() && null != request.getProfitabilityUpperLimit()) {
+//                    if (profitability <= request.getProfitabilityUpperLimit()) {
+//                    unrealDetails.add(unrealInfo); //所建物件放入陣列中
+//
+//                    }
+//                    } else if (null != request.getProfitabilityLowerLimit() && null != request.getProfitabilityUpperLimit()) {
+//                    if (profitability >= request.getProfitabilityLowerLimit() && profitability <= request.getProfitabilityUpperLimit()) {
+//                    unrealDetails.add(unrealInfo); //所建物件放入陣列中
+//                    }
+//                    } else if (null == request.getProfitabilityLowerLimit() && null == request.getProfitabilityUpperLimit()) {
+//                    unrealDetails.add(unrealInfo); //所建物件放入陣列中
+//                    }
 
 //    private String makeLastDocSeq(String tradeDate) {
 //
@@ -139,7 +176,7 @@ public class TransactionMethodService {
 //        int firstEngToAscii = lastDocSeq.charAt(0);
 //        int secondEngToAscii = lastDocSeq.charAt(1);
 //        String num = lastDocSeq.substring(2, 5);
-//        int numToInt = Integer.parseInt(num) + 1;
+//        int numToInt = Double.parseInt(num) + 1;
 //
 //
 //        if (numToInt > 999) {
@@ -201,6 +238,6 @@ public class TransactionMethodService {
 //    double fee = amt * 0.001425;
 //    double tax = amt * 0.003;
 //    double unrealizedGainOrLoss = amt - fee - tax - tcnudRepository.findByStock(stock).getCost();
-//    return Integer.toString((int) unrealizedGainOrLoss);
+//    return Double.toString((int) unrealizedGainOrLoss);
 //}
 //}

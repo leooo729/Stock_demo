@@ -22,9 +22,9 @@ public class Mstmb {
     @Column(name = "MarketType")
     private String marketType;
     @Column(name = "CurPrice")
-    private double curPrice;
+    private Double curPrice;
     @Column(name = "RefPrice")
-    private double refPrice;
+    private Double refPrice;
     @Column(name = "Currency")
     private String currency;
     @Column(name = "ModDate")

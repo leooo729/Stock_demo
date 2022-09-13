@@ -30,15 +30,15 @@ public class Tcnud {
     @Column(name="Stock")
     private String stock;
     @Column(name="Price")
-    private double price;
+    private Double price;
     @Column(name="Qty")
-    private double qty;
+    private Double qty;
     @Column(name="RemainQty")
-    private double remainQty;
+    private Double remainQty;
     @Column(name="Fee")
-    private double fee;
+    private Double fee;
     @Column(name="Cost")
-    private double cost;
+    private Double cost;
     @Column(name="ModDate")
     private String modDate;
     @Column(name="ModTime")

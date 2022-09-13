@@ -1,12 +1,14 @@
 package com.example.demo.service;
 
 import com.example.demo.controller.dto.request.CreateMstmbRequest;
+import com.example.demo.controller.dto.request.StockInfoRequest;
 import com.example.demo.controller.dto.request.UpdateMstmbRequest;
-import com.example.demo.controller.dto.response.MstmbResponse;
+import com.example.demo.controller.dto.response.StockInfoResponse;
 import com.example.demo.model.MstmbRepository;
 import com.example.demo.model.entity.Mstmb;
-import com.example.demo.model.entity.Tcnud;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -19,18 +21,9 @@ public class MstmbService {
     @Autowired
     MstmbRepository mstmbRepository;
 
-    public List<Mstmb> getAllMstmb(){
-        List<Mstmb> mstmbList=mstmbRepository.findAll();
-        return mstmbList;
-    }
-
-    public Mstmb getStockInfo(String stock){
-        Mstmb mstmb=mstmbRepository.findByStock(stock);
-        return mstmb;
-    }
-    public MstmbResponse createMstmb(CreateMstmbRequest request){
-        MstmbResponse mstmbResponse=new MstmbResponse();
-        Mstmb mstmb=new Mstmb();
+    public StockInfoResponse createMstmb(CreateMstmbRequest request) {
+        StockInfoResponse stockInfoResponse = new StockInfoResponse();
+        Mstmb mstmb = new Mstmb();
         mstmb.setStock(request.getStock());
         mstmb.setStockName(request.getStockName());
         mstmb.setMarketType(request.getMarketType());
@@ -43,13 +36,29 @@ public class MstmbService {
 
         mstmbRepository.save(mstmb);
 
-        mstmbResponse.setMstmb(mstmb);
-        mstmbResponse.setStatus("股票資訊新建成功");
-        return mstmbResponse;
+        stockInfoResponse.setMstmb(mstmb);
+        stockInfoResponse.setStatus("股票資訊新建成功");
+        return stockInfoResponse;
     }
-    public MstmbResponse updateMstmb(UpdateMstmbRequest request){
-        MstmbResponse mstmbResponse=new MstmbResponse();
-        Mstmb mstmb=mstmbRepository.findByStock(request.getStock());
+
+    @Cacheable(value = "cacheStock", key = "#request.getStock")
+    public StockInfoResponse getStockInfo(StockInfoRequest request) {
+        StockInfoResponse stockInfoResponse=new StockInfoResponse();
+        Mstmb mstmb = mstmbRepository.findByStock(request.getStock());
+        if (null == mstmb) {
+            stockInfoResponse.setStatus("查無此檔股票資訊");
+            return stockInfoResponse;
+        }
+        stockInfoResponse.setStatus("查詢成功");
+        stockInfoResponse.setMstmb(mstmb);
+
+        return stockInfoResponse;
+    }
+
+    @CachePut(value = "cacheStock", key = "#request.getStock")
+    public StockInfoResponse updateMstmb(UpdateMstmbRequest request) {
+        StockInfoResponse stockInfoResponse = new StockInfoResponse();
+        Mstmb mstmb = mstmbRepository.findByStock(request.getStock());
         mstmb.setCurPrice(request.getCurPrice());
         mstmb.setRefPrice(request.getCurPrice());
         mstmb.setModDate(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")));
@@ -58,8 +67,14 @@ public class MstmbService {
 
         mstmbRepository.save(mstmb);
 
-        mstmbResponse.setMstmb(mstmb);
-        mstmbResponse.setStatus("現值更新成功");
-        return mstmbResponse;
+        stockInfoResponse.setMstmb(mstmb);
+        stockInfoResponse.setStatus("現值更新成功");
+        return stockInfoResponse;
     }
+
 }
+
+//    public List<Mstmb> getAllMstmb() {
+//        List<Mstmb> mstmbList = mstmbRepository.findAll();
+//        return mstmbList;
+//    }

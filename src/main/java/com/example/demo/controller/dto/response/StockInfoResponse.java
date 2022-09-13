@@ -10,7 +10,7 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class MstmbResponse {
-    private Mstmb mstmb;
+public class StockInfoResponse {
     private String status;
+    private Mstmb mstmb;
 }

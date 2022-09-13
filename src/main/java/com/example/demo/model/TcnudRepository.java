@@ -1,4 +1,5 @@
 package com.example.demo.model;
+
 import com.example.demo.model.entity.Hcmio;
 import com.example.demo.model.entity.Tcnud;
 import com.example.demo.model.entity.TcnudRelationPK;
@@ -10,17 +11,22 @@ import org.springframework.stereotype.Repository;
 
 import javax.transaction.Transactional;
 import java.util.List;
+
 @Repository
 public interface TcnudRepository extends JpaRepository<Tcnud, TcnudRelationPK> {
     Tcnud findByStock(String stock);
 
-    List findByBranchNoAndCustSeqAndStock(String branchNo,String custSeq,String stock);
-    List findByBranchNoAndCustSeq(String branchNo,String custSeq);
-    Tcnud findByTradeDateAndBranchNoAndCustSeqAndDocSeq(String tradeDate,String branchNo,String CustSeq,String Docseq);
+    List findByBranchNoAndCustSeqAndStock(String branchNo, String custSeq, String stock);
 
+    List findByBranchNoAndCustSeq(String branchNo, String custSeq);
 
-    @Query(value = "select distinct stock from tcnud where branchNo= ?1 AND custSeq= ?2",nativeQuery = true)
-    List<String> findDistinctStock(String branchNo,String custSeq);
+    Tcnud findByTradeDateAndBranchNoAndCustSeqAndDocSeq(String tradeDate, String branchNo, String CustSeq, String Docseq);
+
+    @Query(value = "select distinct stock from tcnud where branchNo= ?1 AND custSeq= ?2", nativeQuery = true)
+    List<String> findDistinctStock(String branchNo, String custSeq);
+
+    @Query(value = "select sum(cost) from tcnud where branchNo= ?1 AND custSeq= ?2 And tradeDate= ?3", nativeQuery = true)
+    Double getDeliveryFee(String branchNo, String custSeq,String tradeDate);
 
 
 }
