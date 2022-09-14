@@ -18,8 +18,8 @@ public class UnrealDetail {
     private Double nowPrice;
     private Double qty;
     private Double remainQty;
-    private Double fee;
-    private Double cost;
+    private Integer fee;
+    private Integer cost;
     private Double marketValue;
     private Double unrealProfit;
     private String profitability;

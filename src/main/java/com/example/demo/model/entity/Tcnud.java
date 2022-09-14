@@ -36,9 +36,9 @@ public class Tcnud {
     @Column(name="RemainQty")
     private Double remainQty;
     @Column(name="Fee")
-    private Double fee;
+    private Integer fee;
     @Column(name="Cost")
-    private Double cost;
+    private Integer cost;
     @Column(name="ModDate")
     private String modDate;
     @Column(name="ModTime")

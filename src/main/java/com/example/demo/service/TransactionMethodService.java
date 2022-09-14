@@ -10,7 +10,6 @@ import com.example.demo.model.entity.Tcnud;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import static java.lang.Math.floor;
 import static java.lang.Math.round;
 
 @Service
@@ -20,8 +19,6 @@ public class TransactionMethodService {
     TcnudRepository tcnudRepository;
     @Autowired
     MstmbRepository mstmbRepository;
-    @Autowired
-    TransactionMethodService transactionMethodService;
 
     public UnrealDetail getUnrealDetail(Tcnud tcnud) { //取得未實現損益明細的物件
         UnrealDetail unrealDetail = new UnrealDetail(); //先創建一未實現損益明細的物件
@@ -31,15 +28,15 @@ public class TransactionMethodService {
         unrealDetail.setDocSeq(tcnud.getDocSeq());
         unrealDetail.setStock(tcnud.getStock());
         unrealDetail.setStockName(mstmb.getStockName()); //明細檔抓股票名稱
-        unrealDetail.setBuyPrice(tcnud.getPrice());
-        unrealDetail.setNowPrice(mstmb.getCurPrice());//明細檔抓股票現值
+        unrealDetail.setBuyPrice(makeRoundTwo(tcnud.getPrice()));
+        unrealDetail.setNowPrice(makeRoundTwo(mstmb.getCurPrice()));//明細檔抓股票現值
         unrealDetail.setQty(tcnud.getQty());
         unrealDetail.setRemainQty(tcnud.getRemainQty());
-        unrealDetail.setFee(tcnud.getRemainQty() * tcnud.getPrice() * 0.001425);
+        unrealDetail.setFee(countFee(countAmt(tcnud.getRemainQty(), tcnud.getPrice())));
         unrealDetail.setCost(tcnud.getCost());
-        unrealDetail.setMarketValue(unrealDetail.getRemainQty() * unrealDetail.getNowPrice() - unrealDetail.getRemainQty() * unrealDetail.getNowPrice() * 0.003 - unrealDetail.getRemainQty() * unrealDetail.getNowPrice() * 0.001425);
-        unrealDetail.setUnrealProfit(unrealDetail.getMarketValue() - unrealDetail.getCost());
-        unrealDetail.setProfitability((countProfitability(unrealDetail.getUnrealProfit(),unrealDetail.getCost())+"%"));
+        unrealDetail.setMarketValue(countMarketValue(unrealDetail.getRemainQty(), unrealDetail.getNowPrice()));
+        unrealDetail.setUnrealProfit(countUnrealProfit(unrealDetail.getMarketValue(), unrealDetail.getCost()));
+        unrealDetail.setProfitability(makeRoundTwo(countProfitability(unrealDetail.getUnrealProfit(), unrealDetail.getCost())) + "%");
         return unrealDetail;
     }
 
@@ -81,51 +78,66 @@ public class TransactionMethodService {
         if (unrealRequest.getCustSeq().isBlank()) {
             return "客戶帳號輸入錯誤";
         }
+        if (tcnudRepository.findByBranchNoAndCustSeq(unrealRequest.getBranchNo(), unrealRequest.getCustSeq()).isEmpty()) {
+            return "查無符合資料";
+        }
+        if (null != unrealRequest.getProfitabilityLowerLimit() && null != unrealRequest.getProfitabilityUpperLimit()) {
+            if (unrealRequest.getProfitabilityLowerLimit() > unrealRequest.getProfitabilityUpperLimit()) {
+                return "上下限範圍輸入錯誤";
+            }
+        }
         if (!tcnudRepository.findByBranchNoAndCustSeq(unrealRequest.getBranchNo(), unrealRequest.getCustSeq()).isEmpty() && unrealRequest.getStock().isBlank()) {
             return "allPass";
         }
         if (null == mstmbRepository.findByStock(unrealRequest.getStock())) {
             return "無此檔股票資料";
         }
-        if (tcnudRepository.findByBranchNoAndCustSeqAndStock(unrealRequest.getBranchNo(), unrealRequest.getCustSeq(),unrealRequest.getStock()).isEmpty()) {
-            return "查無符合資料";
-        }
+//        if (tcnudRepository.findByBranchNoAndCustSeqAndStock(unrealRequest.getBranchNo(), unrealRequest.getCustSeq(),unrealRequest.getStock()).isEmpty()) {
+//            return "查無符合資料";
+//        }
         return "allPass";
     }
 
-    public Double countAmt(Double price, Double qty) {
-        double amt = round(price * qty);
-        return amt;
+    public double countAmt(Double price, Double qty) {
+        return round(price * qty);
     }
 
-    public Double countFee(double amt) {
-        double fee = round((amt * 0.001425));
-        return fee;
+    public Integer countFee(double amt) {
+        return (int) round((amt * 0.001425));
     }
 
-    public Double countTax(double amt, String bsType) {
+    public Integer countTax(double amt, String bsType) {
         if ("S".equals(bsType)) {
-            double tax = round((amt * 0.003));
-            return tax;
+            return (int) round((amt * 0.003));
         } else if ("B".equals(bsType)) {
-            return 0.0;
+            return 0;
         }
-        return 0.0;
+        return 0;
     }
 
     public double countNetAmt(double amt, String bsType, double fee, double tax) {
         if ("S".equals(bsType)) {
-            double netamt = round((amt - fee - tax));
-            return netamt;
+            return round((amt - fee - tax));
         } else if ("B".equals(bsType)) {
-            double netamt = -round((amt + fee));
-            return netamt;
+            return -round((amt + fee));
         }
         return 0;
     }
-    public double countProfitability(double unrealProfit,double cost){
-        double profitability=unrealProfit/cost*100;
-        return profitability;
+
+    public double countUnrealProfit(Double marketValue, Integer cost) {
+        return round(marketValue - cost);
+    }
+
+    public double countMarketValue(double remainQty, double nowPrice) {
+        return (int) round(remainQty * nowPrice - remainQty * nowPrice * 0.003 - remainQty * nowPrice * 0.001425);
+    }
+
+    public double countProfitability(double unrealProfit, double cost) {
+        return round(unrealProfit / cost * 100);
+    }
+
+    public double makeRoundTwo(double number) {
+        return round(number * 100.0) / 100;
     }
 
 

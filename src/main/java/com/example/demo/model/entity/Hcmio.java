@@ -41,9 +41,9 @@ public class Hcmio {
     @Column(name = "Amt")
     private Double amt;
     @Column(name = "Fee")
-    private Double fee;
+    private Integer fee;
     @Column(name = "Tax")
-    private Double tax;
+    private Integer tax;
     @Column(name = "StinTax")
     private Double stinTax;
     @Column(name = "NetAmt")

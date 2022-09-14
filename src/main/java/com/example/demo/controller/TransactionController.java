@@ -1,16 +1,13 @@
 package com.example.demo.controller;
 
 import com.example.demo.controller.dto.request.DeliveryFeeRequest;
-import com.example.demo.controller.dto.request.StockInfoRequest;
 import com.example.demo.controller.dto.request.TransactionRequest;
 import com.example.demo.controller.dto.request.UnrealRequest;
-import com.example.demo.controller.dto.response.StockInfoResponse;
 import com.example.demo.controller.dto.response.TransactionResponse;
 import com.example.demo.controller.dto.response.UnrealSumResponse;
-import com.example.demo.service.MstmbService;
+import com.example.demo.service.StockService;
 import com.example.demo.service.TransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,7 +19,7 @@ public class TransactionController {
     @Autowired
     TransactionService transactionService;
     @Autowired
-    MstmbService mstmbService;
+    StockService stockService;
 
     @PostMapping("/unreal/add")
     public TransactionResponse makeTransaction(@RequestBody TransactionRequest transactionRequest) {
@@ -46,11 +43,7 @@ public class TransactionController {
         return response;
     }
 
-    @PostMapping("/stock")
-    public StockInfoResponse getStockInfo(@RequestBody StockInfoRequest stockInfoRequest){
-        StockInfoResponse response=mstmbService.getStockInfo(stockInfoRequest);
-        return response;
-    }
+
 
 
 

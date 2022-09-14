@@ -17,6 +17,7 @@ import com.example.demo.model.entity.Tcnud;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -26,6 +27,7 @@ import java.util.Calendar;
 import java.util.List;
 
 @Service
+@Transactional
 public class TransactionService {
 
     @Autowired
@@ -39,25 +41,12 @@ public class TransactionService {
     @Autowired
     HolidayRepository holidayRepository;
 
-    public List<Hcmio> getAllHcmio() {
-        List<Hcmio> hcmioList = hcmioRepository.findAll();
-        return hcmioList;
-    }
-
-    public Hcmio getByDocSeq(String docSeq) {
-        Hcmio hcmio = hcmioRepository.findByDocSeq(docSeq);
-        return hcmio;
-    }
 
     public TransactionResponse makeTransaction(TransactionRequest request) {
-        //先創建一個最終回傳結果的物件
-        TransactionResponse transactionResponse = new TransactionResponse();
+
         //輸入資料檢查有誤，回傳有誤
         if (!"allPass".equals(transactionMethodService.checkTransactionRequest(request))) {
-            transactionResponse.setResultList(null);
-            transactionResponse.setResponseCode("002");
-            transactionResponse.setMessage(transactionMethodService.checkTransactionRequest(request));
-            return transactionResponse;
+            return new TransactionResponse(null, "002", transactionMethodService.checkTransactionRequest(request));
         }
 //----------------------------------------------------------------------------------------
         //創建存放新交易明細檔的物件
@@ -96,7 +85,7 @@ public class TransactionService {
         tcnud.setQty(hcmio.getQty());
         tcnud.setRemainQty(hcmio.getQty());
         tcnud.setFee(hcmio.getFee());
-        tcnud.setCost(Math.abs(hcmio.getNetAmt()));
+        tcnud.setCost((int) Math.abs(hcmio.getNetAmt()));
         tcnud.setModDate(hcmio.getModDate());
         tcnud.setModTime(hcmio.getModTime());
         tcnud.setModUser(hcmio.getModUser());
@@ -109,31 +98,17 @@ public class TransactionService {
 
         unrealDetails.add(unrealDetail); //物件放入陣列
 
-        transactionResponse.setResultList(unrealDetails);
-        transactionResponse.setResponseCode("000");
-        transactionResponse.setMessage("");
 
-        return transactionResponse;
+        return new TransactionResponse(unrealDetails, "000", "");
     }
 
     public TransactionResponse getUnrealDetail(UnrealRequest request) {
 
-        TransactionResponse transactionResponse = new TransactionResponse(); //先創建一個最終回傳結果的物件
-
-        transactionMethodService.checkUnrealRequest(request); //輸入資料做檢查
         //如有誤，回傳錯誤原因
         if ("查無符合資料".equals(transactionMethodService.checkUnrealRequest(request))) {
-            transactionResponse.setResultList(null);
-            transactionResponse.setResponseCode("001");
-            transactionResponse.setMessage("查無符合資料");
-
-            return transactionResponse;
+            return new TransactionResponse(null, "001", "查無符合資料");
         } else if (!"allPass".equals(transactionMethodService.checkUnrealRequest(request))) {
-            transactionResponse.setResultList(null);
-            transactionResponse.setResponseCode("002");
-            transactionResponse.setMessage(transactionMethodService.checkUnrealRequest(request));
-
-            return transactionResponse;
+            return new TransactionResponse(null, "002", transactionMethodService.checkUnrealRequest(request));
         }
 
         List<Tcnud> tcnud; //宣吿一新存餘額表的陣列
@@ -159,7 +134,6 @@ public class TransactionService {
             } else if (null == request.getProfitabilityLowerLimit() && null != request.getProfitabilityUpperLimit()) {
                 if (profitability <= request.getProfitabilityUpperLimit()) {
                     unrealDetails.add(unrealInfo); //所建物件放入陣列中
-
                 }
             } else if (null != request.getProfitabilityLowerLimit() && null != request.getProfitabilityUpperLimit()) {
                 if (profitability >= request.getProfitabilityLowerLimit() && profitability <= request.getProfitabilityUpperLimit()) {
@@ -168,103 +142,94 @@ public class TransactionService {
             } else if (null == request.getProfitabilityLowerLimit() && null == request.getProfitabilityUpperLimit()) {
                 unrealDetails.add(unrealInfo); //所建物件放入陣列中
             }
-//----------------------------------
         }
 
-
-        transactionResponse.setResultList(unrealDetails);
-        transactionResponse.setResponseCode("000");
-        transactionResponse.setMessage("");
-        return transactionResponse;
+        if (unrealDetails.isEmpty()) {
+            return new TransactionResponse(null, "001", "查無符合資料");
+        }
+        return new TransactionResponse(unrealDetails, "000", "");
     }
 
     public UnrealSumResponse getUnrealDetailSum(UnrealRequest request) {
 
-        UnrealSumResponse unrealSumResponse = new UnrealSumResponse(); //先創建一個最終回傳結果的物件
         //如有誤，回傳錯誤原因
         if ("查無符合資料".equals(transactionMethodService.checkUnrealRequest(request))) {
-            unrealSumResponse.setResultList(null);
-            unrealSumResponse.setResponseCode("001");
-            unrealSumResponse.setMessage("查無符合資料");
-
-            return unrealSumResponse;
+            return new UnrealSumResponse(null, "001", "查無符合資料");
         } else if (!"allPass".equals(transactionMethodService.checkUnrealRequest(request))) {
-            unrealSumResponse.setResultList(null);
-            unrealSumResponse.setResponseCode("002");
-            unrealSumResponse.setMessage(transactionMethodService.checkUnrealRequest(request));
-
-            return unrealSumResponse;
+            return new UnrealSumResponse(null, "002", transactionMethodService.checkUnrealRequest(request));
         }
+
+        List<String> getDistinctStock;
+        if (null == request.getStock()) {         //取得該用戶有購買的所有股票(沒有重複值)
+            getDistinctStock = tcnudRepository.findDistinctStock(request.getBranchNo(), request.getCustSeq());
+        } else { //只拿request傳入的股票
+            getDistinctStock = new ArrayList<>();
+            getDistinctStock.add(request.getStock());
+        }
+
         //使用上面getUnrealDetail方法，先取得輸入值的未實現損益明細的陣列
-        List<UnrealDetail> unrealDetails = getUnrealDetail(request).getResultList();
-        //取得該用戶有購買的所有股票(沒有重複值)
-        List<String> allUrealStock = tcnudRepository.findDistinctStock(request.getBranchNo(), request.getCustSeq());
+        UnrealRequest findAllStock = new UnrealRequest(request.getBranchNo(), request.getCustSeq(), request.getStock(), null, null);
+        List<UnrealDetail> unrealDetailList = getUnrealDetail(findAllStock).getResultList();
+        List<UnrealSum> unrealSums = new ArrayList<>(); //創建一存放未實現損益明細總和的陣列
 
-        List<UnrealSum> unrealSum = new ArrayList<>(); //創建一存放未實現損益明細總和的陣列
-
-        for (String stock : allUrealStock) { //用使用者所持股票去跑迴圈
+        for (String stock : getDistinctStock) { //用使用者所持股票去跑迴圈
             Mstmb mstmb = mstmbRepository.findByStock(stock); //抓到目前股票代碼的資料明細檔
             //創建一存放目前股票未實現損益明細的陣列，當換不同股票時，在new一新的，不同股票才可分開
-            List<UnrealDetail> unrealDetailList = new ArrayList<>();
+            List<UnrealDetail> unrealDetails = new ArrayList<>();
+            UnrealSum unrealSum = new UnrealSum(); //創建一新未實現損益明細總和的物件
 
-            double sumRemainQty = 0, sumFee = 0, sumCost = 0; //先初始化用來計算總和的參數
-            for (UnrealDetail unrealDetail : unrealDetails) { //跑每一個未實現損益明細的陣列
+            for (UnrealDetail unrealDetail : unrealDetailList) { //跑每一個未實現損益明細的陣列
                 if (unrealDetail.getStock().equals(stock)) { //當有跟目前大迴圈 Stock 相同時進入條件
                     //做數字的累加
-                    sumRemainQty += unrealDetail.getRemainQty();
-                    sumFee += unrealDetail.getFee();
-                    sumCost += unrealDetail.getCost();
-
-                    unrealDetailList.add(unrealDetail); //將該未實現損益明細物件放入陣列
+                    unrealSum.setSumRemainQty(null == unrealSum.getSumRemainQty() ? unrealDetail.getRemainQty() : unrealSum.getSumRemainQty() + unrealDetail.getRemainQty());
+                    unrealSum.setSumFee(null == unrealSum.getSumFee() ? unrealDetail.getFee() : unrealSum.getSumFee() + unrealDetail.getFee());
+                    unrealSum.setSumCost(null == unrealSum.getSumCost() ? unrealDetail.getCost() : unrealSum.getSumCost() + unrealDetail.getCost());
+                    unrealSum.setSumMarketValue(null == unrealSum.getSumMarketValue() ? unrealDetail.getMarketValue() : unrealSum.getSumMarketValue() + unrealDetail.getMarketValue());
+                    unrealDetails.add(unrealDetail);
                 }
             }
-            UnrealSum unrealInfo = new UnrealSum(); //創建一新未實現損益明細總和的物件
-            //將資料存入
-            unrealInfo.setStock(stock);
-            unrealInfo.setStockName(mstmb.getStockName());
-            unrealInfo.setNowPrice(mstmb.getCurPrice());
-            unrealInfo.setSumRemainQty(sumRemainQty);
-            unrealInfo.setSumFee(sumFee);
-            unrealInfo.setSumCost(sumCost);
-            unrealInfo.setSumMarketValue(unrealInfo.getNowPrice() * unrealInfo.getSumRemainQty() - unrealInfo.getNowPrice() * unrealInfo.getSumRemainQty() * 0.003 - unrealInfo.getNowPrice() * unrealInfo.getSumRemainQty() * 0.001425);
-            unrealInfo.setSumUnrealProfit(unrealInfo.getSumMarketValue() - unrealInfo.getSumCost());
-            unrealInfo.setDetaiList(unrealDetailList); //將小迴圈所儲存的未實現損益明細陣列，也丟進物件中
-//----------------------------------
-            double sumProfitability = transactionMethodService.countProfitability(unrealInfo.getSumUnrealProfit(), unrealInfo.getSumCost());
-            unrealInfo.setSumProfitability(sumProfitability + "%");
-            if (null != request.getProfitabilityLowerLimit() && null == request.getProfitabilityUpperLimit()) {
-                if (sumProfitability >= request.getProfitabilityLowerLimit()) {
-                    unrealSum.add(unrealInfo); //將物件放入最終要回傳的陣列中
-                }
-            } else if (null == request.getProfitabilityLowerLimit() && null != request.getProfitabilityUpperLimit()) {
-                if (sumProfitability <= request.getProfitabilityUpperLimit()) {
-                    unrealSum.add(unrealInfo); //將物件放入最終要回傳的陣列中
+            unrealSum.setStock(stock);
+            unrealSum.setStockName(mstmb.getStockName());
+            unrealSum.setNowPrice(mstmb.getCurPrice());
+            unrealSum.setSumUnrealProfit(unrealSum.getSumMarketValue() - unrealSum.getSumCost());
 
-                }
-            } else if (null != request.getProfitabilityLowerLimit() && null != request.getProfitabilityUpperLimit()) {
-                if (sumProfitability >= request.getProfitabilityLowerLimit() && sumProfitability <= request.getProfitabilityUpperLimit()) {
-                    unrealSum.add(unrealInfo); //將物件放入最終要回傳的陣列中
-                }
-            } else if (null == request.getProfitabilityLowerLimit() && null == request.getProfitabilityUpperLimit()) {
-                unrealSum.add(unrealInfo); //將物件放入最終要回傳的陣列中
-            }
-            //----------------------------------
-
+            unrealSum.setSumProfitability(transactionMethodService.countProfitability(unrealSum.getSumUnrealProfit(), unrealSum.getSumCost()) + "%");
+            unrealSum.setDetaiList(unrealDetails); //將小迴圈所儲存的未實現損益明細陣列，也丟進物件中
+            unrealSums.add(unrealSum); //將物件放入最終要回傳的陣列中
         }
 
-        unrealSumResponse.setResultList(unrealSum);
-        unrealSumResponse.setResponseCode("000");
-        unrealSumResponse.setMessage("");
+        //用來篩選獲利率的結果
+        List<UnrealSum> checkUnrealSum = new ArrayList<>(); //創建一存放r篩選完的未實現損益明細總和的陣列
+        for (UnrealSum unrealSum : unrealSums) {
+            double sumProfitability = transactionMethodService.countProfitability(unrealSum.getSumUnrealProfit(), unrealSum.getSumCost());
+            if (null != request.getProfitabilityLowerLimit() && null == request.getProfitabilityUpperLimit()) { //只限制下限
+                if (sumProfitability >= request.getProfitabilityLowerLimit()) {
+                    checkUnrealSum.add(unrealSum);
+                }
+            } else if (null == request.getProfitabilityLowerLimit() && null != request.getProfitabilityUpperLimit()) { //只限制上限
+                if (sumProfitability <= request.getProfitabilityUpperLimit()) {
+                    checkUnrealSum.add(unrealSum); //將物件放入最終要回傳的陣列中
 
-        return unrealSumResponse;
+                }
+            } else if (null != request.getProfitabilityLowerLimit() && null != request.getProfitabilityUpperLimit()) { //限制上下範圍
+                if (sumProfitability >= request.getProfitabilityLowerLimit() && sumProfitability <= request.getProfitabilityUpperLimit()) {
+                    checkUnrealSum.add(unrealSum);
+                }
+            } else if (null == request.getProfitabilityLowerLimit() && null == request.getProfitabilityUpperLimit()) { //拿所有
+                checkUnrealSum.add(unrealSum); //將物件放入最終要回傳的陣列中
+            }
+        }
+        if (checkUnrealSum.isEmpty()) { //避免篩選完出現沒有資料的情況
+            return new UnrealSumResponse(null, "001", "查無符合資料");
+        }
+        return new UnrealSumResponse(checkUnrealSum, "000", "");
     }
 
     public String getDeliveryFee(DeliveryFeeRequest request) {
 
         Calendar today = Calendar.getInstance();
-        if (1 == today.get(Calendar.DAY_OF_WEEK) || 7 == today.get(Calendar.DAY_OF_WEEK)) {
-            return "今天是假日，無需付交割金";
-        }
+        if (1 == today.get(Calendar.DAY_OF_WEEK) || 7 == today.get(Calendar.DAY_OF_WEEK)) return "今天是假日，無需付交割金";
+
         Calendar target = Calendar.getInstance();
         target.add(Calendar.DATE, -2);
 
@@ -278,12 +243,9 @@ public class TransactionService {
         }
         Double deliveryFee = tcnudRepository.getDeliveryFee(request.getBranchNo(), request.getCustSeq(), sdf.format(target.getTime()));
 
-        if (null == deliveryFee) {
-            return "今日無交割金需付";
-        }
+        if (null == deliveryFee) return "今日無交割金需付";
 
         return "今日需付交割金為 : " + deliveryFee;
     }
-
 
 }
