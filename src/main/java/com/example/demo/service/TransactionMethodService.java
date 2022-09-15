@@ -1,5 +1,6 @@
 package com.example.demo.service;
 
+import com.example.demo.controller.dto.request.DeliveryFeeRequest;
 import com.example.demo.controller.dto.request.TransactionRequest;
 import com.example.demo.controller.dto.request.UnrealRequest;
 import com.example.demo.controller.dto.response.UnrealDetail;
@@ -23,7 +24,7 @@ public class TransactionMethodService {
     public UnrealDetail getUnrealDetail(Tcnud tcnud) { //取得未實現損益明細的物件
         UnrealDetail unrealDetail = new UnrealDetail(); //先創建一未實現損益明細的物件
         Mstmb mstmb = mstmbRepository.findByStock(tcnud.getStock()); //找到改檔股票明細檔
-
+        //以下將資料放入
         unrealDetail.setTradeDate(tcnud.getTradeDate());
         unrealDetail.setDocSeq(tcnud.getDocSeq());
         unrealDetail.setStock(tcnud.getStock());
@@ -100,6 +101,15 @@ public class TransactionMethodService {
         }
         if (null == mstmbRepository.findByStock(unrealRequest.getStock())) {
             return "無此檔股票資料";
+        }
+        return "allPass";
+    }
+
+    public String checkDeliveryFeeRequest(DeliveryFeeRequest deliveryFeeRequest){ //對交割金的傳入值做檢查
+        if(deliveryFeeRequest.getBranchNo().isBlank()||4!=deliveryFeeRequest.getBranchNo().length()){
+            return "分行代碼輸入錯誤(長度需為4碼)";
+        }if(deliveryFeeRequest.getCustSeq().isBlank()||2!=deliveryFeeRequest.getCustSeq().length()){
+            return "客戶帳號輸入錯誤(長度需為2碼)";
         }
         return "allPass";
     }

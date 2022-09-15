@@ -33,9 +33,4 @@ public class StockController {
     }
 }
 
-//    @GetMapping()
-//    public List<Mstmb> getAllMstmb(){
-//        List<Mstmb> mstmbList=mstmbService.getAllMstmb();
-//        return mstmbList;
-//    }
 
