@@ -48,13 +48,13 @@ public class TransactionService {
         //創建存放新交易明細檔的物件
         Hcmio hcmio = new Hcmio();
         //將資料放入交易明細檔
-        hcmio.setTradeDate(request.getTradeDate()); //LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"))
+        hcmio.setTradeDate(request.getTradeDate());
         hcmio.setBranchNo(request.getBranchNo());
         hcmio.setCustSeq(request.getCustSeq());
-        hcmio.setDocSeq(request.getDocSeq()); //makeLastDocSeq(hcmio.getTradeDate())
+        hcmio.setDocSeq(request.getDocSeq());
         hcmio.setStock(request.getStock());
         hcmio.setBsType("B");
-        hcmio.setPrice(request.getPrice());//mstmb.getCurPrice()
+        hcmio.setPrice(request.getPrice());
         hcmio.setQty(request.getQty());
         hcmio.setAmt(transactionMethodService.countAmt(hcmio.getPrice(), hcmio.getQty()));
         hcmio.setFee(transactionMethodService.countFee(hcmio.getAmt()));
@@ -101,36 +101,36 @@ public class TransactionService {
             return new TransactionResponse(null, "002", transactionMethodService.checkUnrealRequest(request));
         }
 
-        List<Tcnud> tcnud; //宣吿一新存餘額表的陣列
+        List<Tcnud> tcnudList; //宣吿一新存餘額表的陣列
 
         if (request.getStock().isEmpty()) { //輸入無股票代碼，抓該用戶所有的餘額表資料
-            tcnud = tcnudRepository.findByBranchNoAndCustSeq(request.getBranchNo(), request.getCustSeq());
+            tcnudList = tcnudRepository.findByBranchNoAndCustSeq(request.getBranchNo(), request.getCustSeq());
         } else { //抓該用戶，輸入代碼的股票的所有餘額表資料
-            tcnud = tcnudRepository.findByBranchNoAndCustSeqAndStock(request.getBranchNo(), request.getCustSeq(), request.getStock());
+            tcnudList = tcnudRepository.findByBranchNoAndCustSeqAndStock(request.getBranchNo(), request.getCustSeq(), request.getStock());
         }
 
         List<UnrealDetail> unrealDetails = new ArrayList<>(); //創建一存放未實現損益明細的陣列
 
-        for (Tcnud tcd : tcnud) { //用餘額表陣列去跑迴圈
-            UnrealDetail unrealInfo = transactionMethodService.getUnrealDetail(tcd); //用餘額表資料去創建未實現損益明細物件
+        for (Tcnud tcnud : tcnudList) { //用餘額表陣列去跑迴圈
+            UnrealDetail unrealDetail = transactionMethodService.getUnrealDetail(tcnud); //用餘額表資料去創建未實現損益明細物件
 // ----------------------------------------------------------------------------------------
             //獲利率區間判斷
-            double profitability = transactionMethodService.countProfitability(unrealInfo.getUnrealProfit(), unrealInfo.getCost());
+            double profitability = transactionMethodService.countProfitability(unrealDetail.getUnrealProfit(), unrealDetail.getCost());
 
             if (null != request.getProfitabilityLowerLimit() && null == request.getProfitabilityUpperLimit()) { //只限制下限
                 if (profitability >= request.getProfitabilityLowerLimit()) {
-                    unrealDetails.add(unrealInfo);
+                    unrealDetails.add(unrealDetail);
                 }
             } else if (null == request.getProfitabilityLowerLimit() && null != request.getProfitabilityUpperLimit()) { //只限制上限
                 if (profitability <= request.getProfitabilityUpperLimit()) {
-                    unrealDetails.add(unrealInfo);
+                    unrealDetails.add(unrealDetail);
                 }
             } else if (null != request.getProfitabilityLowerLimit() && null != request.getProfitabilityUpperLimit()) { //限制上下範圍
                 if (profitability >= request.getProfitabilityLowerLimit() && profitability <= request.getProfitabilityUpperLimit()) {
-                    unrealDetails.add(unrealInfo);
+                    unrealDetails.add(unrealDetail);
                 }
             } else if (null == request.getProfitabilityLowerLimit() && null == request.getProfitabilityUpperLimit()) { //拿所有
-                unrealDetails.add(unrealInfo);
+                unrealDetails.add(unrealDetail);
             }
         }
 // ----------------------------------------------------------------------------------------
@@ -149,20 +149,20 @@ public class TransactionService {
             return new UnrealSumResponse(null, "002", transactionMethodService.checkUnrealRequest(request));
         }
 
-        List<String> getDistinctStock;
+        List<String> distinctStockList;
         if (request.getStock().isEmpty()) { //取得該用戶有購買的所有股票(沒有重複值)
-            getDistinctStock = tcnudRepository.findDistinctStock(request.getBranchNo(), request.getCustSeq());
+            distinctStockList = tcnudRepository.findDistinctStock(request.getBranchNo(), request.getCustSeq());
         } else { //只拿request傳入的股票
-            getDistinctStock = new ArrayList<>();
-            getDistinctStock.add(request.getStock());
+            distinctStockList = new ArrayList<>();
+            distinctStockList.add(request.getStock());
         }
 
         //使用上面getUnrealDetail方法，先取得輸入值的未實現損益明細的陣列
-        UnrealRequest findAllStock = new UnrealRequest(request.getBranchNo(), request.getCustSeq(), request.getStock(), null, null);
-        List<UnrealDetail> unrealDetailList = getUnrealDetail(findAllStock).getResultList();
+        UnrealRequest getUnrealDetail = new UnrealRequest(request.getBranchNo(), request.getCustSeq(), request.getStock(), null, null);
+        List<UnrealDetail> unrealDetailList = getUnrealDetail(getUnrealDetail).getResultList();
         List<UnrealSum> unrealSums = new ArrayList<>(); //創建一存放未實現損益明細總和的陣列
 
-        for (String stock : getDistinctStock) { //用使用者所持股票去跑迴圈
+        for (String stock : distinctStockList) { //用使用者所持股票去跑迴圈
             Mstmb mstmb = mstmbRepository.findByStock(stock); //抓到目前股票代碼的資料明細檔
             //創建一存放目前股票未實現損益明細的陣列，當換不同股票時，在new一新的，不同股票才可分開
             List<UnrealDetail> unrealDetails = new ArrayList<>();
@@ -189,6 +189,7 @@ public class TransactionService {
 
             double Profitability = transactionMethodService.countProfitability(unrealSum.getSumUnrealProfit(), unrealSum.getSumCost());
 // ----------------------------------------------------------------------------------------
+            //獲利率區間判斷
             if (null != request.getProfitabilityLowerLimit() && null == request.getProfitabilityUpperLimit()) { //只限制下限
                 if (Profitability >= request.getProfitabilityLowerLimit()) {
                     unrealSums.add(unrealSum);
