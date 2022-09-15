@@ -160,7 +160,7 @@ public class TransactionService {
         }
 
         List<String> getDistinctStock;
-        if (null == request.getStock()) { //取得該用戶有購買的所有股票(沒有重複值)
+        if (request.getStock().isEmpty()) { //取得該用戶有購買的所有股票(沒有重複值)
             getDistinctStock = tcnudRepository.findDistinctStock(request.getBranchNo(), request.getCustSeq());
         } else { //只拿request傳入的股票
             getDistinctStock = new ArrayList<>();
@@ -173,6 +173,7 @@ public class TransactionService {
         List<UnrealSum> unrealSums = new ArrayList<>(); //創建一存放未實現損益明細總和的陣列
 
         for (String stock : getDistinctStock) { //用使用者所持股票去跑迴圈
+            String a=stock;
             Mstmb mstmb = mstmbRepository.findByStock(stock); //抓到目前股票代碼的資料明細檔
             //創建一存放目前股票未實現損益明細的陣列，當換不同股票時，在new一新的，不同股票才可分開
             List<UnrealDetail> unrealDetails = new ArrayList<>();
