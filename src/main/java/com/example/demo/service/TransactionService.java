@@ -157,60 +157,54 @@ public class TransactionService {
             distinctStockList.add(request.getStock());
         }
 
-        //使用上面getUnrealDetail方法，先取得輸入值的未實現損益明細的陣列
-        UnrealRequest getUnrealDetail = new UnrealRequest(request.getBranchNo(), request.getCustSeq(), request.getStock(), null, null);
-        List<UnrealDetail> unrealDetailList = getUnrealDetail(getUnrealDetail).getResultList();
-        List<UnrealSum> unrealSums = new ArrayList<>(); //創建一存放未實現損益明細總和的陣列
+        List<UnrealSum> unrealSumList = new ArrayList<>(); //創建一存放未實現損益明細總和的陣列
 
         for (String stock : distinctStockList) { //用使用者所持股票去跑迴圈
             Mstmb mstmb = mstmbRepository.findByStock(stock); //抓到目前股票代碼的資料明細檔
-            //創建一存放目前股票未實現損益明細的陣列，當換不同股票時，在new一新的，不同股票才可分開
-            List<UnrealDetail> unrealDetails = new ArrayList<>();
+            //創建一存放目前股票的未實現損益明細的陣列，當換下一個股票時，在new一新的，不同股票才可分開
+            UnrealRequest getUnrealDetail = new UnrealRequest(request.getBranchNo(), request.getCustSeq(),stock, null, null);
+            List<UnrealDetail> unrealDetailList = getUnrealDetail(getUnrealDetail).getResultList(); //將同檔股票的未實現損益明細放入同一陣列
+
             UnrealSum unrealSum = new UnrealSum(); //創建一新未實現損益明細總和的物件
 
-            for (UnrealDetail unrealDetail : unrealDetailList) { //跑每一個未實現損益明細的陣列
-                if (unrealDetail.getStock().equals(stock)) { //當有跟目前大迴圈 Stock 相同時進入條件
-                    //做數字的累加
+            for (UnrealDetail unrealDetail : unrealDetailList) { //跑目前迴圈股票的每一個未實現損益明細的陣列做數字的累加
                     unrealSum.setSumRemainQty(null == unrealSum.getSumRemainQty() ? unrealDetail.getRemainQty() : unrealSum.getSumRemainQty() + unrealDetail.getRemainQty());
                     unrealSum.setSumFee(null == unrealSum.getSumFee() ? unrealDetail.getFee() : unrealSum.getSumFee() + unrealDetail.getFee());
                     unrealSum.setSumCost(null == unrealSum.getSumCost() ? unrealDetail.getCost() : unrealSum.getSumCost() + unrealDetail.getCost());
                     unrealSum.setSumMarketValue(null == unrealSum.getSumMarketValue() ? unrealDetail.getMarketValue() : unrealSum.getSumMarketValue() + unrealDetail.getMarketValue());
-                    //將同檔股票的未實現損益明細放入同一陣列
-                    unrealDetails.add(unrealDetail);
-                }
             }
+
             unrealSum.setStock(stock);
             unrealSum.setStockName(mstmb.getStockName());
             unrealSum.setNowPrice(String.format("%.2f", transactionMethodService.makeRoundTwo(mstmb.getCurPrice())));
             unrealSum.setSumUnrealProfit(unrealSum.getSumMarketValue() - unrealSum.getSumCost());
-
             unrealSum.setProfitability(String.format("%.2f", transactionMethodService.makeRoundTwo(unrealSum.getSumUnrealProfit() / (double) unrealSum.getSumCost() * 100)) + "%");
-            unrealSum.setDetaiList(unrealDetails); //將小迴圈所儲存的未實現損益明細陣列，也丟進物件中
+            unrealSum.setDetaiList(unrealDetailList); //將小迴圈所儲存的未實現損益明細陣列，也丟進物件中
 
             double Profitability = transactionMethodService.countProfitability(unrealSum.getSumUnrealProfit(), unrealSum.getSumCost());
 // ----------------------------------------------------------------------------------------
             //獲利率區間判斷
             if (null != request.getProfitabilityLowerLimit() && null == request.getProfitabilityUpperLimit()) { //只限制下限
                 if (Profitability >= request.getProfitabilityLowerLimit()) {
-                    unrealSums.add(unrealSum);
+                    unrealSumList.add(unrealSum);
                 }
             } else if (null == request.getProfitabilityLowerLimit() && null != request.getProfitabilityUpperLimit()) { //只限制上限
                 if (Profitability <= request.getProfitabilityUpperLimit()) {
-                    unrealSums.add(unrealSum);
+                    unrealSumList.add(unrealSum);
                 }
             } else if (null != request.getProfitabilityLowerLimit() && null != request.getProfitabilityUpperLimit()) { //限制上下範圍
                 if (Profitability >= request.getProfitabilityLowerLimit() && Profitability <= request.getProfitabilityUpperLimit()) {
-                    unrealSums.add(unrealSum);
+                    unrealSumList.add(unrealSum);
                 }
             } else if (null == request.getProfitabilityLowerLimit() && null == request.getProfitabilityUpperLimit()) { //拿所有
-                unrealSums.add(unrealSum);
+                unrealSumList.add(unrealSum);
             }
         }
 // ----------------------------------------------------------------------------------------
-        if (unrealSums.isEmpty()) { //避免篩選完出現沒有資料的情況
+        if (unrealSumList.isEmpty()) { //避免篩選完出現沒有資料的情況
             return new UnrealSumResponse(null, "001", "查無符合資料");
         }
-        return new UnrealSumResponse(unrealSums, "000", "");
+        return new UnrealSumResponse(unrealSumList, "000", "");
     }
 
     public String getDeliveryFee(DeliveryFeeRequest request) { //計算交割金

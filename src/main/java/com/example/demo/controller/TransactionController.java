@@ -20,8 +20,12 @@ public class TransactionController {
 
     @PostMapping("/unreal/add")
     public TransactionResponse makeTransaction(@RequestBody TransactionRequest transactionRequest) {
-        TransactionResponse response= transactionService.makeTransaction(transactionRequest);
-        return response;
+        try {
+            TransactionResponse response= transactionService.makeTransaction(transactionRequest);
+            return response;
+        }catch (Exception e){
+            return  new TransactionResponse(null,"005","伺服器忙碌中，請稍後嘗試");
+        }
     }
 
     @PostMapping("/unreal/detail")
