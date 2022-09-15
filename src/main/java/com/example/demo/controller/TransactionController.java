@@ -5,7 +5,6 @@ import com.example.demo.controller.dto.request.TransactionRequest;
 import com.example.demo.controller.dto.request.UnrealRequest;
 import com.example.demo.controller.dto.response.TransactionResponse;
 import com.example.demo.controller.dto.response.UnrealSumResponse;
-import com.example.demo.service.StockService;
 import com.example.demo.service.TransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,8 +17,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class TransactionController {
     @Autowired
     TransactionService transactionService;
-    @Autowired
-    StockService stockService;
 
     @PostMapping("/unreal/add")
     public TransactionResponse makeTransaction(@RequestBody TransactionRequest transactionRequest) {
