@@ -37,7 +37,7 @@ public class Hcmio {
     @Column(name = "Price")
     private Double price;
     @Column(name = "Qty")
-    private Double qty;
+    private Long qty;
     @Column(name = "Amt")
     private Double amt;
     @Column(name = "Fee")
@@ -47,7 +47,7 @@ public class Hcmio {
     @Column(name = "StinTax")
     private Double stinTax;
     @Column(name = "NetAmt")
-    private Double netAmt;
+    private Long netAmt;
     @Column(name = "ModDate")
     private String modDate;
     @Column(name = "ModTime")

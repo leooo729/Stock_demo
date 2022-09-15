@@ -18,7 +18,7 @@ public class TransactionRequest {
     private String stock;
     private String bsType;
     private Double price;
-    private Double qty;
+    private Long qty;
 //    private double amt;
 //    private double fee;
 //    private double tax;

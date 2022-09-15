@@ -1,7 +1,5 @@
 package com.example.demo.model;
 
-import com.example.demo.model.entity.Hcmio;
-import com.example.demo.model.entity.HcmioRelationPK;
 import com.example.demo.model.entity.Holiday;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

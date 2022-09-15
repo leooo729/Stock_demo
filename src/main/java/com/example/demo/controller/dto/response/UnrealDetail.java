@@ -14,13 +14,13 @@ public class UnrealDetail {
     private String docSeq;
     private String stock;
     private String stockName;
-    private Double buyPrice;
-    private Double nowPrice;
-    private Double qty;
-    private Double remainQty;
+    private String buyPrice;
+    private String nowPrice;
+    private Long qty;
+    private Long remainQty;
     private Integer fee;
     private Integer cost;
-    private Double marketValue;
-    private Double unrealProfit;
+    private Long marketValue;
+    private Long unrealProfit;
     private String profitability;
 }

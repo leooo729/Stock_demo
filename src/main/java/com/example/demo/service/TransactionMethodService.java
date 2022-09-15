@@ -28,36 +28,36 @@ public class TransactionMethodService {
         unrealDetail.setDocSeq(tcnud.getDocSeq());
         unrealDetail.setStock(tcnud.getStock());
         unrealDetail.setStockName(mstmb.getStockName()); //明細檔抓股票名稱
-        unrealDetail.setBuyPrice(makeRoundTwo(tcnud.getPrice()));
-        unrealDetail.setNowPrice(makeRoundTwo(mstmb.getCurPrice()));//明細檔抓股票現值
+        unrealDetail.setBuyPrice(String.format("%.2f", makeRoundTwo(tcnud.getPrice())));
+        unrealDetail.setNowPrice(String.format("%.2f", makeRoundTwo(mstmb.getCurPrice())));//明細檔抓股票現值
         unrealDetail.setQty(tcnud.getQty());
         unrealDetail.setRemainQty(tcnud.getRemainQty());
-        unrealDetail.setFee(countFee(countAmt(tcnud.getRemainQty(), tcnud.getPrice())));
+        unrealDetail.setFee(countFee(countAmt(tcnud.getPrice(), tcnud.getRemainQty())));
         unrealDetail.setCost(tcnud.getCost());
-        unrealDetail.setMarketValue(countMarketValue(unrealDetail.getRemainQty(), unrealDetail.getNowPrice()));
+        unrealDetail.setMarketValue(countMarketValue(unrealDetail.getRemainQty(), mstmb.getCurPrice()));
         unrealDetail.setUnrealProfit(countUnrealProfit(unrealDetail.getMarketValue(), unrealDetail.getCost()));
-        unrealDetail.setProfitability(makeRoundTwo(countProfitability(unrealDetail.getUnrealProfit(), unrealDetail.getCost())) + "%");
+        unrealDetail.setProfitability(String.format("%.2f", makeRoundTwo(countProfitability(unrealDetail.getUnrealProfit(), unrealDetail.getCost()))) + "%");
         return unrealDetail;
     }
 
     public String checkTransactionRequest(TransactionRequest transactionRequest) { //檢查傳入的交易資料是否都正確
-        if (transactionRequest.getTradeDate().isBlank()) {
-            return "交易日期輸入錯誤";
+        if (transactionRequest.getTradeDate().isBlank()||8!=transactionRequest.getTradeDate().length()) {
+            return "交易日期輸入錯誤(長度需為8碼)";
         }
-        if (transactionRequest.getBranchNo().isBlank()) {
-            return "分行代碼輸入錯誤";
+        if (transactionRequest.getBranchNo().isBlank() || 4!=transactionRequest.getBranchNo().length()) {
+            return "分行代碼輸入錯誤(長度需為4碼)";
         }
-        if (transactionRequest.getCustSeq().isBlank()) {
-            return "客戶帳號輸入錯誤";
+        if (transactionRequest.getCustSeq().isBlank() || 2!=transactionRequest.getCustSeq().length()) {
+            return "客戶帳號輸入錯誤(長度需為2碼)";
         }
-        if (transactionRequest.getDocSeq().isBlank()) {
-            return "委託書號輸入錯誤";
+        if (transactionRequest.getDocSeq().isBlank()|| 5!=transactionRequest.getDocSeq().length()) {
+            return "委託書號輸入錯誤(長度需為5碼)";
         }
         if (null != tcnudRepository.findByTradeDateAndBranchNoAndCustSeqAndDocSeq(transactionRequest.getTradeDate(), transactionRequest.getBranchNo(), transactionRequest.getCustSeq(), transactionRequest.getDocSeq())) {
             return "輸入資料已存在";
         }
-        if (transactionRequest.getStock().isBlank()) {
-            return "股票代碼輸入錯誤";
+        if (transactionRequest.getStock().isBlank()||4!=transactionRequest.getStock().length()) {
+            return "股票代碼輸入錯誤(長度需為4碼)";
         }
         if (null == mstmbRepository.findByStock(transactionRequest.getStock())) {
             return "無此檔股票資料";
@@ -72,14 +72,17 @@ public class TransactionMethodService {
     }
 
     public String checkUnrealRequest(UnrealRequest unrealRequest) { //檢查傳入的查詢未實現損益資料是否都正確
-        if (unrealRequest.getBranchNo().isBlank()) {
-            return "分行代碼輸入錯誤";
+        if (unrealRequest.getBranchNo().isBlank()|| 4!=unrealRequest.getBranchNo().length()) {
+            return "分行代碼輸入錯誤(長度需為4碼)";
         }
-        if (unrealRequest.getCustSeq().isBlank()) {
-            return "客戶帳號輸入錯誤";
+        if (unrealRequest.getCustSeq().isBlank()||2!=unrealRequest.getCustSeq().length()) {
+            return "客戶帳號輸入錯誤(長度需為2碼)";
         }
         if (tcnudRepository.findByBranchNoAndCustSeq(unrealRequest.getBranchNo(), unrealRequest.getCustSeq()).isEmpty()) {
             return "查無符合資料";
+        }
+        if(!unrealRequest.getStock().isBlank()&&4!=unrealRequest.getStock().length()){
+            return "股票代碼輸入錯誤(長度需為4碼)";
         }
         if (null != unrealRequest.getProfitabilityLowerLimit() && null != unrealRequest.getProfitabilityUpperLimit()) {
             if (unrealRequest.getProfitabilityLowerLimit() > unrealRequest.getProfitabilityUpperLimit()) {
@@ -92,13 +95,10 @@ public class TransactionMethodService {
         if (null == mstmbRepository.findByStock(unrealRequest.getStock())) {
             return "無此檔股票資料";
         }
-//        if (tcnudRepository.findByBranchNoAndCustSeqAndStock(unrealRequest.getBranchNo(), unrealRequest.getCustSeq(),unrealRequest.getStock()).isEmpty()) {
-//            return "查無符合資料";
-//        }
         return "allPass";
     }
 
-    public double countAmt(Double price, Double qty) {
+    public double countAmt(double price, Long qty) {
         return round(price * qty);
     }
 
@@ -107,90 +107,40 @@ public class TransactionMethodService {
     }
 
     public Integer countTax(double amt, String bsType) {
-        if ("S".equals(bsType)) {
-            return (int) round((amt * 0.003));
-        } else if ("B".equals(bsType)) {
-            return 0;
-        }
-        return 0;
+        return ("S".equals(bsType)) ? (int) round((amt * 0.003)) : 0;
     }
 
-    public double countNetAmt(double amt, String bsType, double fee, double tax) {
-        if ("S".equals(bsType)) {
-            return round((amt - fee - tax));
-        } else if ("B".equals(bsType)) {
-            return -round((amt + fee));
-        }
-        return 0;
+    public Long countNetAmt(double amt, String bsType, double fee, double tax) {
+        return ("S".equals(bsType)) ? round((amt - fee - tax)) : -round((amt + fee));
     }
 
-    public double countUnrealProfit(Double marketValue, Integer cost) {
+    public Long countUnrealProfit(double marketValue, Integer cost) {
         return round(marketValue - cost);
     }
 
-    public double countMarketValue(double remainQty, double nowPrice) {
-        return (int) round(remainQty * nowPrice - remainQty * nowPrice * 0.003 - remainQty * nowPrice * 0.001425);
+    public Long countMarketValue(double Qty, double Price) {
+        return round(Qty * Price - Qty * Price * 0.003 - Qty * Price * 0.001425);
     }
 
     public double countProfitability(double unrealProfit, double cost) {
-        return round(unrealProfit / cost * 100);
+        return unrealProfit / cost * 100;
     }
 
     public double makeRoundTwo(double number) {
-        return round(number * 100.0) / 100;
+        return round(number * 100) / 100.0;
     }
-
-
 }
-//    double sumProfitability = transactionMethodService.countProfitability(unrealInfo.getSumUnrealProfit(), unrealInfo.getSumCost());
-//            unrealInfo.setSumProfitability(sumProfitability + "%");
-//                    if (null != request.getProfitabilityLowerLimit() && null == request.getProfitabilityUpperLimit()) {
-//                    if (sumProfitability >= request.getProfitabilityLowerLimit()) {
-//                    unrealSum.add(unrealInfo); //將物件放入最終要回傳的陣列中
-//                    }
-//                    } else if (null == request.getProfitabilityLowerLimit() && null != request.getProfitabilityUpperLimit()) {
-//                    if (sumProfitability <= request.getProfitabilityUpperLimit()) {
-//                    unrealSum.add(unrealInfo); //將物件放入最終要回傳的陣列中
-//
-//                    }
-//                    } else if (null != request.getProfitabilityLowerLimit() && null != request.getProfitabilityUpperLimit()) {
-//                    if (sumProfitability >= request.getProfitabilityLowerLimit() && sumProfitability <= request.getProfitabilityUpperLimit()) {
-//                    unrealSum.add(unrealInfo); //將物件放入最終要回傳的陣列中
-//                    }
-//                    } else if (null == request.getProfitabilityLowerLimit() && null == request.getProfitabilityUpperLimit()) {
-//                    unrealSum.add(unrealInfo); //將物件放入最終要回傳的陣列中
-//                    }
-//
-//                    double profitability = transactionMethodService.countProfitability(unrealInfo.getUnrealProfit(), unrealInfo.getCost());
-//
-//                    if (null != request.getProfitabilityLowerLimit() && null == request.getProfitabilityUpperLimit()) {
-//                    if (profitability >= request.getProfitabilityLowerLimit()) {
-//                    unrealDetails.add(unrealInfo); //所建物件放入陣列中
-//                    }
-//                    } else if (null == request.getProfitabilityLowerLimit() && null != request.getProfitabilityUpperLimit()) {
-//                    if (profitability <= request.getProfitabilityUpperLimit()) {
-//                    unrealDetails.add(unrealInfo); //所建物件放入陣列中
-//
-//                    }
-//                    } else if (null != request.getProfitabilityLowerLimit() && null != request.getProfitabilityUpperLimit()) {
-//                    if (profitability >= request.getProfitabilityLowerLimit() && profitability <= request.getProfitabilityUpperLimit()) {
-//                    unrealDetails.add(unrealInfo); //所建物件放入陣列中
-//                    }
-//                    } else if (null == request.getProfitabilityLowerLimit() && null == request.getProfitabilityUpperLimit()) {
-//                    unrealDetails.add(unrealInfo); //所建物件放入陣列中
-//                    }
 
-//    private String makeLastDocSeq(String tradeDate) {
+//    private String makeLastDocSeq(String tradeDate) { //自動產生委託書號
 //
 //        String lastDocSeq = hcmioRepository.getLastDocSeq(tradeDate);
 //        if (null == lastDocSeq) {
 //            return "AA001";
 //        }
-//
 //        int firstEngToAscii = lastDocSeq.charAt(0);
 //        int secondEngToAscii = lastDocSeq.charAt(1);
 //        String num = lastDocSeq.substring(2, 5);
-//        int numToInt = Double.parseInt(num) + 1;
+//        int numToInt = Integer.parseInt(num) + 1;
 //
 //
 //        if (numToInt > 999) {
@@ -201,16 +151,12 @@ public class TransactionMethodService {
 //                firstEngToAscii++;
 //            }
 //        }
-//
 //        String numToString = String.format("%03d", numToInt);
 //        String firstEngToString = Character.toString((char) firstEngToAscii);
 //        String secondEngToString = Character.toString((char) secondEngToAscii);
 //
-//        String docSeq = firstEngToString + secondEngToString + numToString;
-//
-//        return docSeq;
+//        return firstEngToString + secondEngToString + numToString;
 //    }
-
 
 //check
 //檢查是否有傳入值以及是否為正確格式
@@ -245,13 +191,3 @@ public class TransactionMethodService {
 //            return "無該檔持股";
 //        }
 //通過以上檢查，確定傳入的stock,bsType,qty都是有值且正確的
-//public String unrealizedGainOrLoss(String stock) {
-//    Mstmb mstmb = mstmbRepository.findByStock(stock);
-//    double qty = tcnudRepository.findByStock(stock).getRemainQty();
-//    double amt = mstmb.getCurPrice() * qty;
-//    double fee = amt * 0.001425;
-//    double tax = amt * 0.003;
-//    double unrealizedGainOrLoss = amt - fee - tax - tcnudRepository.findByStock(stock).getCost();
-//    return Double.toString((int) unrealizedGainOrLoss);
-//}
-//}

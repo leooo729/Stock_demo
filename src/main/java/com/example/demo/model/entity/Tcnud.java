@@ -32,9 +32,9 @@ public class Tcnud {
     @Column(name="Price")
     private Double price;
     @Column(name="Qty")
-    private Double qty;
+    private Long qty;
     @Column(name="RemainQty")
-    private Double remainQty;
+    private Long remainQty;
     @Column(name="Fee")
     private Integer fee;
     @Column(name="Cost")

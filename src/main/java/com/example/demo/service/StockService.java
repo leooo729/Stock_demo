@@ -22,23 +22,19 @@ public class StockService {
 
     @Cacheable(value = "cacheStock", key = "#request.getStock()")
     public StockInfoResponse getStockInfo(StockInfoRequest request) {
-        StockInfoResponse stockInfoResponse=new StockInfoResponse();
-        if(!"allPass".equals(checkStockInfoRequest(request))){ //檢查傳入資料是否有誤
-            return new StockInfoResponse(checkStockInfoRequest(request),null);
+        if (!"allPass".equals(checkStockInfoRequest(request))) { //檢查傳入資料是否有誤
+            return new StockInfoResponse(checkStockInfoRequest(request), null);
         }
         Mstmb mstmb = mstmbRepository.findByStock(request.getStock()); //抓資料庫該檔股票資料
-        stockInfoResponse.setStatus("查詢成功");
-        stockInfoResponse.setMstmb(mstmb);
 
-        return stockInfoResponse;
+        return new StockInfoResponse("查詢成功",mstmb);
     }
 
     @CachePut(value = "cacheStock", key = "#request.getStock()")
     public StockInfoResponse updateStockPrice(UpdateStockPriceRequest request) {
-        StockInfoResponse stockInfoResponse = new StockInfoResponse();
 
-        if(!"allPass".equals(checkUpdatePriceRequest(request))){ //檢查傳入資料是否有誤
-            return new StockInfoResponse(checkUpdatePriceRequest(request),null);
+        if (!"allPass".equals(checkUpdatePriceRequest(request))) { //檢查傳入資料是否有誤
+            return new StockInfoResponse(checkUpdatePriceRequest(request), null);
         }
         Mstmb mstmb = mstmbRepository.findByStock(request.getStock()); //找到該檔股票在資料庫中的資料
         //做表更新
@@ -50,13 +46,11 @@ public class StockService {
 
         mstmbRepository.save(mstmb); //將原本資料更新
 
-        stockInfoResponse.setMstmb(mstmb);
-        stockInfoResponse.setStatus("現值更新成功");
-        return stockInfoResponse;
+        return new StockInfoResponse("現值更新成功",mstmb);
     }
 
     public StockInfoResponse createStockInfo(CreateStockInfoRequest request) {
-        StockInfoResponse stockInfoResponse = new StockInfoResponse();
+
         Mstmb mstmb = new Mstmb();
         mstmb.setStock(request.getStock());
         mstmb.setStockName(request.getStockName());
@@ -70,28 +64,28 @@ public class StockService {
 
         mstmbRepository.save(mstmb);
 
-        stockInfoResponse.setMstmb(mstmb);
-        stockInfoResponse.setStatus("股票資訊新建成功");
-        return stockInfoResponse;
+        return new StockInfoResponse("股票資訊新建成功",mstmb);
     }
+
     //--------------------------------------------------------------
     private String checkStockInfoRequest(StockInfoRequest request) {
         if (request.getStock().isBlank()) {
-            return "請填寫欲查詢股票代碼";
+            return "查詢失敗，請填寫欲查詢股票代碼(長度需為4碼)";
         }
         if (null == mstmbRepository.findByStock(request.getStock())) {
-            return "查無此檔股票資訊";
+            return "查無此檔股票資訊(長度需為4碼)";
         }
         return "allPass";
     }
+
     private String checkUpdatePriceRequest(UpdateStockPriceRequest request) {
-        if (request.getStock().isBlank()||null==request.getCurPrice()){
-            return "表單未填寫完成";
+        if (request.getStock().isBlank()||4!=request.getStock().length()) {
+            return "更新失敗，請填寫欲更新股票代碼(長度需為4碼)";
         }
-        if(0>=request.getCurPrice()){
+        if (0 >= request.getCurPrice()|| null == request.getCurPrice()) {
             return "請輸入有效股票價格";
         }
-        if(null==mstmbRepository.findByStock(request.getStock())){
+        if (null == mstmbRepository.findByStock(request.getStock())) {
             return "查無該檔股票資料";
         }
         return "allPass";

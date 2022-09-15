@@ -1,6 +1,5 @@
 package com.example.demo.controller.dto.response;
 
-import com.example.demo.controller.dto.response.UnrealDetail;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,13 +13,13 @@ import java.util.List;
 public class UnrealSum {
     private String stock;
     private String stockName;
-    private Double nowPrice;
-    private Double sumRemainQty;
-    private Double sumFee;
-    private Double sumCost;
-    private Double sumMarketValue;
-    private Double sumUnrealProfit;
-    private String sumProfitability;
+    private String nowPrice;
+    private Long sumRemainQty;
+    private Integer sumFee;
+    private Integer sumCost;
+    private Long sumMarketValue;
+    private Long sumUnrealProfit;
+    private String profitability;
     private List<UnrealDetail> detaiList;
 
 }

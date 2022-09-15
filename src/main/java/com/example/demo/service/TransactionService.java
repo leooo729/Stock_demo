@@ -52,10 +52,10 @@ public class TransactionService {
         //創建存放新交易明細檔的物件
         Hcmio hcmio = new Hcmio();
         //將資料放入交易明細檔
-        hcmio.setTradeDate(request.getTradeDate());//LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"))
+        hcmio.setTradeDate(request.getTradeDate()); //LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"))
         hcmio.setBranchNo(request.getBranchNo());
         hcmio.setCustSeq(request.getCustSeq());
-        hcmio.setDocSeq(request.getDocSeq());//makeLastDocSeq(hcmio.getTradeDate())
+        hcmio.setDocSeq(request.getDocSeq()); //makeLastDocSeq(hcmio.getTradeDate())
 
         hcmio.setStock(request.getStock());
         hcmio.setBsType("B");
@@ -160,7 +160,7 @@ public class TransactionService {
         }
 
         List<String> getDistinctStock;
-        if (null == request.getStock()) {         //取得該用戶有購買的所有股票(沒有重複值)
+        if (null == request.getStock()) { //取得該用戶有購買的所有股票(沒有重複值)
             getDistinctStock = tcnudRepository.findDistinctStock(request.getBranchNo(), request.getCustSeq());
         } else { //只拿request傳入的股票
             getDistinctStock = new ArrayList<>();
@@ -185,15 +185,16 @@ public class TransactionService {
                     unrealSum.setSumFee(null == unrealSum.getSumFee() ? unrealDetail.getFee() : unrealSum.getSumFee() + unrealDetail.getFee());
                     unrealSum.setSumCost(null == unrealSum.getSumCost() ? unrealDetail.getCost() : unrealSum.getSumCost() + unrealDetail.getCost());
                     unrealSum.setSumMarketValue(null == unrealSum.getSumMarketValue() ? unrealDetail.getMarketValue() : unrealSum.getSumMarketValue() + unrealDetail.getMarketValue());
+                    //將同檔股票的未實現損益明細放入同一陣列
                     unrealDetails.add(unrealDetail);
                 }
             }
             unrealSum.setStock(stock);
             unrealSum.setStockName(mstmb.getStockName());
-            unrealSum.setNowPrice(mstmb.getCurPrice());
+            unrealSum.setNowPrice(String.format("%.2f",transactionMethodService.makeRoundTwo(mstmb.getCurPrice())));
             unrealSum.setSumUnrealProfit(unrealSum.getSumMarketValue() - unrealSum.getSumCost());
 
-            unrealSum.setSumProfitability(transactionMethodService.countProfitability(unrealSum.getSumUnrealProfit(), unrealSum.getSumCost()) + "%");
+            unrealSum.setProfitability(String.format("%.2f",transactionMethodService.makeRoundTwo(unrealSum.getSumUnrealProfit()/(double)unrealSum.getSumCost()*100)) + "%");
             unrealSum.setDetaiList(unrealDetails); //將小迴圈所儲存的未實現損益明細陣列，也丟進物件中
             unrealSums.add(unrealSum); //將物件放入最終要回傳的陣列中
         }
@@ -201,18 +202,18 @@ public class TransactionService {
         //用來篩選獲利率的結果
         List<UnrealSum> checkUnrealSum = new ArrayList<>(); //創建一存放r篩選完的未實現損益明細總和的陣列
         for (UnrealSum unrealSum : unrealSums) {
-            double sumProfitability = transactionMethodService.countProfitability(unrealSum.getSumUnrealProfit(), unrealSum.getSumCost());
+            double Profitability = transactionMethodService.countProfitability(unrealSum.getSumUnrealProfit(), unrealSum.getSumCost());
             if (null != request.getProfitabilityLowerLimit() && null == request.getProfitabilityUpperLimit()) { //只限制下限
-                if (sumProfitability >= request.getProfitabilityLowerLimit()) {
+                if (Profitability >= request.getProfitabilityLowerLimit()) {
                     checkUnrealSum.add(unrealSum);
                 }
             } else if (null == request.getProfitabilityLowerLimit() && null != request.getProfitabilityUpperLimit()) { //只限制上限
-                if (sumProfitability <= request.getProfitabilityUpperLimit()) {
+                if (Profitability <= request.getProfitabilityUpperLimit()) {
                     checkUnrealSum.add(unrealSum); //將物件放入最終要回傳的陣列中
 
                 }
             } else if (null != request.getProfitabilityLowerLimit() && null != request.getProfitabilityUpperLimit()) { //限制上下範圍
-                if (sumProfitability >= request.getProfitabilityLowerLimit() && sumProfitability <= request.getProfitabilityUpperLimit()) {
+                if (Profitability >= request.getProfitabilityLowerLimit() && Profitability <= request.getProfitabilityUpperLimit()) {
                     checkUnrealSum.add(unrealSum);
                 }
             } else if (null == request.getProfitabilityLowerLimit() && null == request.getProfitabilityUpperLimit()) { //拿所有
