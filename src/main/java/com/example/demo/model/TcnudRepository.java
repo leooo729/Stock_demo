@@ -21,7 +21,7 @@ public interface TcnudRepository extends JpaRepository<Tcnud, TcnudRelationPK> {
     List<String> findDistinctStock(String branchNo, String custSeq); //抓指定用戶的購買股票，重複不抓
 
     @Query(value = "select sum(cost) from tcnud where branchNo= ?1 AND custSeq= ?2 And tradeDate= ?3", nativeQuery = true)
-    Double getDeliveryFee(String branchNo, String custSeq,String tradeDate); // 計算交割金額
+    Long getDeliveryFee(String branchNo, String custSeq,String tradeDate); // 計算交割金額
 
 
 }

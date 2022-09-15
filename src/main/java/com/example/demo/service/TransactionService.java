@@ -226,11 +226,11 @@ public class TransactionService {
             }
         }
 
-        Double deliveryFee = tcnudRepository.getDeliveryFee(request.getBranchNo(), request.getCustSeq(), sdf.format(today.getTime()));
+        Long deliveryFee = tcnudRepository.getDeliveryFee(request.getBranchNo(), request.getCustSeq(),sdf.format(today.getTime()));
         if (null == deliveryFee) {
             return "今日無交割金需付";
         }
-        return "今日需付交割金為 : " + deliveryFee;
+        return "今日需付交割金為 : " + deliveryFee +" 元";
     }
 
 }

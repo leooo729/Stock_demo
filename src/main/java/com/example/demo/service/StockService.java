@@ -19,6 +19,8 @@ import java.time.format.DateTimeFormatter;
 public class StockService {
     @Autowired
     MstmbRepository mstmbRepository;
+    @Autowired
+    TransactionMethodService transactionMethodService;
 
     @Cacheable(value = "cacheStock", key = "#request.getStock()")
     public StockInfoResponse getStockInfo(StockInfoRequest request) {
@@ -38,8 +40,8 @@ public class StockService {
         }
         Mstmb mstmb = mstmbRepository.findByStock(request.getStock()); //找到該檔股票在資料庫中的資料
         //做表更新
-        mstmb.setCurPrice(request.getCurPrice());
-        mstmb.setRefPrice(request.getCurPrice());
+        mstmb.setCurPrice(transactionMethodService.makeRoundTwo(request.getCurPrice()));
+        mstmb.setRefPrice(transactionMethodService.makeRoundTwo(request.getCurPrice()));
         mstmb.setModDate(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")));
         mstmb.setModTime(LocalDateTime.now().format(DateTimeFormatter.ofPattern("HHmmss")));
         mstmb.setModUser("Leo");
@@ -55,8 +57,8 @@ public class StockService {
         mstmb.setStock(request.getStock());
         mstmb.setStockName(request.getStockName());
         mstmb.setMarketType(request.getMarketType());
-        mstmb.setCurPrice(request.getCurPrice());
-        mstmb.setRefPrice(request.getRefPrice());
+        mstmb.setCurPrice(transactionMethodService.makeRoundTwo(request.getCurPrice()));
+        mstmb.setRefPrice(transactionMethodService.makeRoundTwo(request.getRefPrice()));
         mstmb.setCurrency(request.getCurrency());
         mstmb.setModDate(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")));
         mstmb.setModTime(LocalDateTime.now().format(DateTimeFormatter.ofPattern("HHmmss")));

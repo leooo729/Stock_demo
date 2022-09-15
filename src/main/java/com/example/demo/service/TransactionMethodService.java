@@ -111,6 +111,9 @@ public class TransactionMethodService {
         }if(deliveryFeeRequest.getCustSeq().isBlank()||2!=deliveryFeeRequest.getCustSeq().length()){
             return "客戶帳號輸入錯誤(長度需為2碼)";
         }
+        if(tcnudRepository.findByBranchNoAndCustSeq(deliveryFeeRequest.getBranchNo(),deliveryFeeRequest.getCustSeq()).isEmpty()){
+            return "此用戶無交易資料";
+        }
         return "allPass";
     }
 
