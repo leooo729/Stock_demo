@@ -186,34 +186,30 @@ public class TransactionService {
 
             unrealSum.setProfitability(String.format("%.2f", transactionMethodService.makeRoundTwo(unrealSum.getSumUnrealProfit() / (double) unrealSum.getSumCost() * 100)) + "%");
             unrealSum.setDetaiList(unrealDetails); //將小迴圈所儲存的未實現損益明細陣列，也丟進物件中
-            unrealSums.add(unrealSum); //將物件放入最終要回傳的陣列中
-        }
 
-        //用來篩選獲利率的結果
-        List<UnrealSum> checkUnrealSum = new ArrayList<>(); //創建一存放r篩選完的未實現損益明細總和的陣列
-        for (UnrealSum unrealSum : unrealSums) {
             double Profitability = transactionMethodService.countProfitability(unrealSum.getSumUnrealProfit(), unrealSum.getSumCost());
+// ----------------------------------------------------------------------------------------
             if (null != request.getProfitabilityLowerLimit() && null == request.getProfitabilityUpperLimit()) { //只限制下限
                 if (Profitability >= request.getProfitabilityLowerLimit()) {
-                    checkUnrealSum.add(unrealSum);
+                    unrealSums.add(unrealSum);
                 }
             } else if (null == request.getProfitabilityLowerLimit() && null != request.getProfitabilityUpperLimit()) { //只限制上限
                 if (Profitability <= request.getProfitabilityUpperLimit()) {
-                    checkUnrealSum.add(unrealSum); //將物件放入最終要回傳的陣列中
-
+                    unrealSums.add(unrealSum);
                 }
             } else if (null != request.getProfitabilityLowerLimit() && null != request.getProfitabilityUpperLimit()) { //限制上下範圍
                 if (Profitability >= request.getProfitabilityLowerLimit() && Profitability <= request.getProfitabilityUpperLimit()) {
-                    checkUnrealSum.add(unrealSum);
+                    unrealSums.add(unrealSum);
                 }
             } else if (null == request.getProfitabilityLowerLimit() && null == request.getProfitabilityUpperLimit()) { //拿所有
-                checkUnrealSum.add(unrealSum); //將物件放入最終要回傳的陣列中
+                unrealSums.add(unrealSum);
             }
         }
-        if (checkUnrealSum.isEmpty()) { //避免篩選完出現沒有資料的情況
+// ----------------------------------------------------------------------------------------
+        if (unrealSums.isEmpty()) { //避免篩選完出現沒有資料的情況
             return new UnrealSumResponse(null, "001", "查無符合資料");
         }
-        return new UnrealSumResponse(checkUnrealSum, "000", "");
+        return new UnrealSumResponse(unrealSums, "000", "");
     }
 
     public String getDeliveryFee(DeliveryFeeRequest request) { //計算交割金
