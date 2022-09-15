@@ -67,7 +67,7 @@ public class StockService {
         return new StockInfoResponse("股票資訊新建成功",mstmb);
     }
 
-    //--------------------------------------------------------------
+    //-------------------------------------------------------------- 檢查
     private String checkStockInfoRequest(StockInfoRequest request) {
         if (request.getStock().isBlank()) {
             return "查詢失敗，請填寫欲查詢股票代碼(長度需為4碼)";
@@ -84,6 +84,9 @@ public class StockService {
         }
         if (0 >= request.getCurPrice()|| null == request.getCurPrice()) {
             return "請輸入有效股票價格";
+        }
+        if(request.getCurPrice()>=1_000_000){
+            return "輸入價格超出範圍";
         }
         if (null == mstmbRepository.findByStock(request.getStock())) {
             return "查無該檔股票資料";

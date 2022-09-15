@@ -65,8 +65,14 @@ public class TransactionMethodService {
         if (transactionRequest.getPrice() <= 0 || null == transactionRequest.getPrice()) {
             return "請輸入有效購買價格";
         }
+        if(transactionRequest.getPrice()>=1_000_000){
+            return "輸入價格超出範圍";
+        }
         if (transactionRequest.getQty() <= 0 || null == transactionRequest.getQty()) {
             return "請輸入有效購買數量";
+        }
+        if(transactionRequest.getQty()>=1_000_000_000){
+            return "輸入數量超出範圍";
         }
         return "allPass";
     }
